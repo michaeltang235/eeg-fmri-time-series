@@ -3,7 +3,7 @@ clear all
 %---------------------------------------------------------------------------
 % This script takes file(s) the following inputs:
 % (i) path to input file(s)
-% (ii) number of files (.ev2) containing details of events recorded 
+% (ii) format the filenames (.ev2) containing details of events recorded 
 % (iii) def. of events (neurologist markings, e.g. 21 and 41, ...),
 % (iv) eeg sampling frequency 
 % and outputs struct. array named terms which contains 
@@ -54,11 +54,8 @@ subnum = '27';
 % enter directory and filename of input file(s)
 directname = ['/Users/michaeltang/Downloads/fmri_project/', 'sub', subnum, '_imthres0_exmask'];
 
-% enter number of input file(s) (.ev2) 
-input_num = 3;
-
 % % enter format of input file(s)
-evfilename_format = 'Sub27_Run%d_Events.ev2';   % %d is added for string formatting later
+evfilename_format = ['Sub', subnum, '*.ev2'];   % %d is added for string formatting later
 
 % enter event types interested
 % e.g. {[1, 11], [12], [13]} denotes event 1 is composed of types 1 and 11, 
@@ -81,10 +78,21 @@ op_results = 0;
 
 %----------------
 
-% creat an array of input filename
+% with format of *.ev2 filename entered, use dir to get full path of file(s)
+evfile_path = dir(fullfile(directname , evfilename_format));   
+
+% each .ev2 file found is given a struct. evfile_path to store its info., 
+% get number of .ev2 files located in directory 
+input_num = size(evfile_path, 1);
+
+% print message to terminal listing number of .ev2 files found for this
+% subject
+sprintf('subject %s, number of .ev2 files found = %d', subnum, input_num)
+
+% access name of each .ev2 file from struct. evfile_path
 evfilename = cell(input_num, 1);
 for i = 1:input_num
-    evfilename{i} = sprintf(evfilename_format, i);
+    evfilename{i} = evfile_path(i).name;
 end
 
 % initialize array for outputting onset times and relevant info.
