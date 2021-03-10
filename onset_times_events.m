@@ -22,6 +22,7 @@ clear all
 % *** assume format of input file(s) as follows: 2nd column denotes event 
 % types, 3rd column denotes response, and 6th column denotes offset (time) ***
 
+% - directory specified only stores the necessary ev.2 file(s)
 % - string "runX_ev" must be contained in input filename
 % - diff. between onset_times_events_1.m and onset_times_event.m are
 % that 
