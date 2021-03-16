@@ -27,7 +27,7 @@ clear all
 % EEG samples from the beginning of the recording.
 % ***
 
-% - directory specified only stores the necessary ev.2 file(s)
+% - directory specified only stores the necessary number of ev.2 file(s)
 % - string "runX_ev" must be contained in input filename
 % - diff. between onset_times_events_1.m and onset_times_event.m are
 % that 
@@ -80,7 +80,7 @@ filenameoutput = ['onset_times_events_sub', subnum, '.mat'];
 sampfreq = 2000;   % Hz
 
 % enter time in seconds of first fmri frame relative to beginning of eeg 
-% recording (if known, otherwise leave it empty and it will be determined
+% recording (if known, otherwise leave it empty ('') and it will be determined
 % in the script)
 fmri_frame_ti = '';
 
@@ -131,15 +131,14 @@ end
 
 % define function named onsettimes that inputs the folloing:
 % (i) directory of event details file, (ii) filename of event details, 
-% (iii) sampling freq., and (iv) array(s) of event types
-% interested,
+% (iii) sampling freq., (iv) array(s) of event types interested, and (v)
+% (optional) time in seconds when the first fmri frame was acquired
 % then output the following: 
 % (i) onset times matrix (in terms of offset and time)
-% (ii) event's intitial time (unit of second)
-% (iii & iv) freq. of event 1 and event 2
-% e.g. event types of 21 and 41 are grouped as event 1
+% (ii) events' intitial times (unit of seconds)
+% (iii & iv) freq. of each event
 % remarks: input arguments of function must be placed in the order defined
-% function [ontimesmat, evti, ev1freq, ev2freq] = onsettimes(eventmat, sampfreq, varargin)
+
 function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger)
 
     % import data from files to struct
