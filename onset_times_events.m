@@ -6,16 +6,18 @@ clear all
 % (ii) format the filenames (.ev2) containing details of events recorded 
 % (iii) def. of events (neurologist markings, e.g. 21 and 41, ...),
 % (iv) eeg sampling frequency 
+% (v) fmri trigger in seconds (if known, optional)
 % and outputs struct. array named terms which contains 
 % the following:
-% (i): string of definition of each event in each run
+% (i): number of conditions established in each run
+% (ii): string of definition of each event in each run
 % e.g. type_1_22_run_3
-% (ii): definition of each event (i.e. types each event contains) (array)
-% (iii): onsettimes array that lists onset times of each event, (col. 1)
-% lists the times provided in input dataset, (col. 2) lists onset times in
-% unit of seconds with respec to the first fmri image acquistion
+% (iii): definition of each event (i.e. types each event contains) (array)
+% (iv): onsettimes array that (col. 1) lists the times provided in input 
+% dataset, (col. 2) onset times in unit of seconds with respec to the first 
+% fmri image acquistion
 % (iv): onset times of each event in unit of (s) from col. 2 of onsettimes array
-% (v): frequency of occurence of each event
+% (v): frequency of occurence of each event in each run
 
 % Remarks: 
 
@@ -29,6 +31,7 @@ clear all
 
 % - directory specified only stores the necessary number of ev.2 file(s)
 % - string "runX_ev" must be contained in input filename
+
 % - diff. between onset_times_events_1.m and onset_times_event.m are
 % that 
 % (i): when onset time (ti) of an event is not found in a certain run, instead of
@@ -80,9 +83,9 @@ filenameoutput = ['onset_times_events_sub', subnum, '.mat'];
 sampfreq = 2000;   % Hz
 
 % enter time in seconds of first fmri frame relative to beginning of eeg 
-% recording (if known, otherwise leave it empty ('') and it will be determined
+% recording (if known, otherwise leave it empty ([]) and it will be determined
 % in the script)
-fmri_frame_ti = '';
+fmri_frame_ti = [];
 
 % enter if output should be written to path (1 = yes, 0 = no)
 op_results = 0;
@@ -97,8 +100,8 @@ op_results = 0;
 % get full path of file(s)
 evfile_path = dir(fullfile(directname , evfilename_format));   
 
-% each .ev2 file found is given a struct. evfile_path to store its info., 
-% get number of .ev2 files located in directory 
+% each .ev2 file found is given a dim. in struct. evfile_path to store 
+% its info., get number of .ev2 files located in directory 
 input_num = size(evfile_path, 1);
 
 % print message to terminal listing number of .ev2 files found for this
@@ -115,11 +118,7 @@ end
 terms = {};
 for i = 1:input_num
     fn_run = sprintf('run%d', i);
-    if isequal(fmri_frame_ti, '')   % if fmri_frame_ti is empty
-        terms.(fn_run) = onsettimes(directname, evfilename{i}, sampfreq, events);
-    else   % if fmri_frame_ti is provided by user
-        terms.(fn_run) = onsettimes(directname, evfilename{i}, sampfreq, events, fmri_frame_ti);
-    end
+    terms.(fn_run) = onset_times(directname, evfilename{i}, sampfreq, events, fmri_frame_ti);
 end
 
 % output struct. array to directory
@@ -129,17 +128,21 @@ end
 
 %--------------------------------
 
-% define function named onsettimes that inputs the folloing:
-% (i) directory of event details file, (ii) filename of event details, 
-% (iii) sampling freq., (iv) array(s) of event types interested, and (v)
-% (optional) time in seconds when the first fmri frame was acquired
+% define function named onset_times that requires the following inputs:
+% (i) directory of event details file, 
+% (ii) filename of event details (*.ev2 files), 
+% (iii) sampling freq., 
+% (iv) array(s) of event types interested, and 
+% (v) time in seconds when the first fmri frame was acquired (optional)
 % then output the following: 
-% (i) onset times matrix (in terms of offset and time)
-% (ii) events' intitial times (unit of seconds)
-% (iii & iv) freq. of each event
+% (i) number of conditions established in each run
+% (ii) strings of event definitions
+% (iii) onset times matrix (in terms of integer offset and time)
+% (iv) events' intitial times (unit of seconds)
+% (v) freq. of each event
 % remarks: input arguments of function must be placed in the order defined
 
-function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger)
+function run = onset_times(directname, evfilename, sampfreq, events, fmri_trigger)
 
     % import data from files to struct
     eventdata = importdata(fullfile(directname, evfilename));   % event data for this run
@@ -147,8 +150,7 @@ function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger
     % get event matrix of each run from struct.
     eventmat = eventdata.data;  
     
-    % get number of events provided (num. of variable inputs), the first 3
-    % input argu. are fixed
+    % get number of events provided 
     numevents = length(events);
     
     % create eventdef array, use for loop to assign the i^th variable input
@@ -163,7 +165,7 @@ function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger
     % and time (s) relative to the first fmri image (col. 2))
     ontimesar = {};
     
-    % freq. of each event
+    % initialize array evfre for storing freq. of each event 
     evfreq = cell(1, numevents);
     for i = 1:numevents
         evfreq{i} = 0;
@@ -178,11 +180,10 @@ function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger
     formatnum = logical(eventmat(1,6)/sampfreq > 1);
    
     % determine fmri_ti, the time at which first fmri frame was aqcuired
-    % relative to the start of eeg recordings, by the number of input
-    % arguments. If fewer than 5 input arg are entered, locate the row
-    % where the first occurrence of type 0 and response 5 are found.
-    % Otherwise, assign the 5^th input arg. to the variable.
-    if nargin < 5   % if less than 5 input arg. are found
+    % relative to the start of eeg recordings, by checking if the 5th input
+    % arg. is an empty matrix. If so, locate the first occurrence of type 0 
+    % and response 5, otherwise, assign the 5^th input arg. to the variable.
+    if isempty(fmri_trigger)   % if 5th input arg. is empty
         % get time and row number in eventmat at which first func. image was 
         % acquired (fmri_ti), which corresponds to neurological marking 
         % of event type 0 and respone 5
@@ -190,7 +191,7 @@ function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger
             if eventmat(i, 2) == 0 && eventmat(i, 3) == 5   % col. 2 = type and col. 3 = response
                 fmri_ti = eventmat(i, 6);   % get offset from col. 6 
                 fmri_ti_rownum = i;   % get correpsonding row number
-                break
+                break   % break loop as only first occurrence is interested
             end
         end
         % print fmri_ti and the associated row number in current input file to terminal
@@ -198,23 +199,23 @@ function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger
             evfilename, fmri_ti_rownum, fmri_ti)
     end
     
-    % if number of input arg. is not less than 5, assign the 5^th input arg. 
+    % if the 5th input arg. is not empty, assign the 5^th input arg. 
     % to fmri_ti and set assoicated row number as 1, so all rows including
-    % the 1st one in input file are scanned in the loop defined below
-    if ~(nargin < 5) % if number of input arg. is not less than 5
+    % the 1st one in input file (.ev2) are scanned in the loop defined below
+    if ~(isempty(fmri_trigger)) % if 5th input arg. is not empty
         fmri_ti = fmri_trigger;   % assign the 5^th input arg. to var.
         fmri_ti_rownum = 1;   % set row number
         sprintf('In %s, first fmri frame was set as the 5th input arg. (%.3f)', evfilename, fmri_trigger)
     end
-    
+   
     % use for loop to go through each event, for each value in the def. 
-    % of the i^th event, check if it is equal to any row in col. 2 of eventmat 
-    % after fmri_ti (happened after fmri acquisition
+    % of the i^th event, check if it is equal to any row in col. 2 of eventmat.
+    % Only consider rows after fmri_ti (happened after fmri acquisition
     % had begun)
     % (e.g. def. of event{i} = [1, 11], check which row in col. 2 of
     % eventmat has the same value (1 or 11))
     % if so, extract the corresponding onset time from column 6, 
-    % check the unit of times reported, and convert the values to unit of
+    % check unit of times reported, and convert the values to unit of
     % seconds if necessary, assign resultant value to ontimesar
     % e.g. ontimesar{3}(5,2) contains the 5^th onset time in (s) of event 3
     
@@ -233,7 +234,7 @@ function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger
                 end
             end
         end
-        if evfreq{i} == 0   % if no row in eventmat matched with current def. of events
+        if evfreq{i} == 0   % if no rows in eventmat matched with current def. of events
             ontimesar{i} = [];   % assign empty matrix
         end
     end
@@ -253,6 +254,7 @@ function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger
     eind = strfind(lower(evfilename), '_ev');   % index of '_ev' in event filename
     runnum = evfilename(sind+3:eind-1);   % string of run number contained in event filename
     
+    % assemble required strings
     eventdefstr = cell(1, numevents);
     for i = 1:numevents
         % create place holder by num. of types in each event
@@ -261,8 +263,8 @@ function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger
         eventdefstr{i} = sprintf(append('type_', placestr, 'run_%s'), eventdef{i}, runnum);
     end
  
-    % empty matrix is assigned to ontimesar if no event type is found in eventmat
-    % only select non-empty cells  
+    % empty matrix is assigned to ontimesar if no event type is found in
+    % eventmat, only select non-empty cells  
     
     % create matrix named nonemptyind for storing indices of non-zero
     % entries in evfreq
@@ -273,9 +275,9 @@ function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger
         end
     end
     
-    % number of conditions for each run is equal to the number of sets of 
-    % non-empty event types identified, get length of nonemptyid to assign
-    % value to var. num_cond
+    % number of conditions established in each run is equal to the number 
+    % of sets of non-empty event types identified, get length of nonemptyid 
+    % to assign value to var. num_cond
     num_cond = length(nonemptyind);
      
     % empty matrix is assigned to ontimesar if no event type is found in eventmat
@@ -285,14 +287,14 @@ function run = onsettimes(directname, evfilename, sampfreq, events, fmri_trigger
     run.results.event_def_str = eventdefstr(nonemptyind);   % string describing def. of each event for spec. run
     run.results.event_def = eventdef(nonemptyind);    % defition of each event for spec. run
     run.results.onsettimes = ontimesar(nonemptyind);   % onset times recorded in dataset provided
-    run.results.evti = evti(nonemptyind);   % initial time of each event in 
+    run.results.evti = evti(nonemptyind);   % initial time (seconds) of each event in each run
     
      % output quantities calcu. (including EMPTY values) to field "data" 
      % under struct. "run"
     run.data.event_def_str = eventdefstr;   % string describing def. of each event for spec. run
     run.data.event_def = eventdef;   % defition of each event for spec. run
     run.data.onsettimes = ontimesar;   % onset times recorded in dataset provided
-    run.data.evti = evti;   % initial time of each event in (s)
+    run.data.evti = evti;   % initial time (seconds) of each event in (s)
     run.data.evfreq = evfreq;   % freq. of each event 
         
     
