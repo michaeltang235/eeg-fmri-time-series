@@ -283,7 +283,8 @@ end
 
 % take tranpose of cont_mat_all_runs and assign value to X_multistat,
 % a design matrix, which is one of the input arg. of multistat
-% rows denote image files and columns denote combo. of events in all runs
+% rows denote image files and columns denote combo. of events in all runs 
+% (independent variables of interest)
 % e.g.: 1st column combines files type(s)_1_11_run_1, type(s)_1_11_run_2 and type(s)_1_11_run_3
 X_multistat = cont_mat_all_runs';
 
