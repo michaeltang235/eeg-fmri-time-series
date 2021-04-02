@@ -3,9 +3,9 @@ tic
 close all
 clear all
 
-% This script uses fmristat toolbox to statistically analyze fmri data,
-% including creating design matrix, fitting linear model, and calculating
-% t-statistics.
+% This script uses fmristat toolbox to statistically analyze processed fmri 
+% data, including creating design matrix, fitting linear model, and 
+% calculating t-statistics.
 
 % The following .m files in the toolbox are utilized
 % (i): fmridesign.m for constructing design matrix of processed fmri data
@@ -18,26 +18,30 @@ clear all
 % devations to path
 % (iii): user can select if step of model estimation is run or not
 
+% Updates:
+% Apr. 1, 2021: use full path instead of fullfile func. to access processed
+% images, run numbers displayed are obtained directly from fields within
+% struct. terms
 %---------------------------------------------------------------------------
 %---------------------------------------------------------------------------
 % BEGIN USER INPUT
 
 % enter subject number (str)
-subnum = '27';
+subnum = '14';
 
 % enter path to directory where all input files are located
-directname = ['/Users/michaeltang/Downloads/fmri_project/', 'sub', subnum, '_imthres0_exmask'];
+directname = ['C:\Users\siumichael.tang\Downloads\fmri_project\', 'sub', subnum];
+% directname = ['/Users/michaeltang/Downloads/fmri_project/', 'sub', subnum, '_imthres0_exmask'];
 
 % enter number of runs (num. of processed .nii file = % number of session(s))
-numsess = 3;
+numsess = 2;
 
 % enter format of processed fmri image file(s)
-proc_filename_format = 'swraRun%d_10min.nii';   % %d is added for string formatting later
+proc_filename_format = 'swraRun*.nii';   % wildcard char is added for searching in pwd
 
 % format directory and filename of onset times array and prelim. results
-directnamemat = [directname, '/matrices'];
-onset_times_filename = ['onset_times_events_', 'sub', subnum, '.mat'];   % onset times array for all runs
-% prelim_filename = ['prelim_preproc_', 'sub', subnum, '.mat'];   % prelim. results
+directname_mat = [directname, filesep, 'matrices'];
+onset_times_filename = ['onset_times_events_extract_', 'sub', subnum, '.mat'];   % onset times array for all runs
 
 % enter if step of model estimation should be executed (takes a long time)
 modest = 0;
@@ -49,16 +53,20 @@ modest = 0;
 %---------------------------------------------------------------------------
 % PART (I): PRELIMINARY
 
-% creat an array of processed image filenames
-proc_filename = cell(numsess, 1);
-for i = 1:numsess
-    proc_filename{i} = sprintf(proc_filename_format, i);
+% get full path of processed image filenames
+[numfile, proc_file_path] = get_path(directname, proc_filename_format);
+
+% check if number of file(s) found equals to number of sessions entered, if
+% not, print warning message
+if numfile ~= numsess
+    sprintf(['number of file(s) found is different than number of sessions', ...
+        ' entered, please check'])
 end
 
 % read nifti image info. from file(s) 
 imginfo = cell(numsess, 1);
 for i = 1:numsess
-    imginfo{i} = niftiinfo(fullfile(directname, proc_filename{i}));
+    imginfo{i} = niftiinfo(proc_file_path{i});
 end
 
 % get number of processed images in different runs
@@ -82,13 +90,16 @@ end
 numslices = imginfo{1}.raw.dim(4);  
 TR = imginfo{1}.raw.pixdim(5); 
 
+% load onset times array
+terms = load(fullfile(directname_mat, onset_times_filename));
+
+% get fieldnames of terms (i.e. run number, not necessarily starts from 1)
+fieldname_run = fieldnames(terms.terms);
+
 % print processed image info. to console
 for i = 1:numsess
-sprintf('run%d, numimage = %d, numslices = %d, TR = %f', i, numimage{i}, numslices, TR)
+    sprintf('%s, numimage = %d, numslices = %d, TR = %f', fieldname_run{i}, numimage{i}, numslices, TR)
 end
-
-% load onset times array
-terms = load(fullfile(directnamemat, onset_times_filename));
 
 % if no onset times are recorded for an event, an empty matrix is assigned
 % select non-empty entries from term struct. array, get following variables
@@ -98,14 +109,11 @@ terms = load(fullfile(directnamemat, onset_times_filename));
 event_def_str = cell(1, numsess);   % initialize event_def_str cell array
 event_def = cell(1, numsess);   % initialize event_def cell array
 evti = cell(1, numsess);   % intialize evti cell array
-for i = 1:numsess   
-    % for specific run
-    fieldname_run = sprintf('run%d', i);
-    
+for i = 1:numsess  
     % get non-empty event def. and onset times (evti)
-    event_def_str{i} = terms.terms.(fieldname_run).results.event_def_str;
-    event_def{i} = terms.terms.(fieldname_run).results.event_def;
-    evti{i} = terms.terms.(fieldname_run).results.evti;
+    event_def_str{i} = terms.terms.(fieldname_run{i}).results.event_def_str;
+    event_def{i} = terms.terms.(fieldname_run{i}).results.event_def;
+    evti{i} = terms.terms.(fieldname_run{i}).results.evti;
 end
 
 % END PART (I): PRELIMINARY
@@ -116,7 +124,7 @@ end
 lm = struct;
 
 % perform model specification and model estimation for each run
-for runind = 1:numsess
+for runind = 1:numsess   % numsess
 
 % get frame times (image acqusition times in seconds)
 frametimes = TR*(0:numimage{runind}-1);
@@ -143,7 +151,7 @@ end
 X_lm = fmridesign(frametimes, relslicetimes, event_matrix);
 
 % create fieldname for current run, which will be used in struct. lm
-fieldname = sprintf('run%d', runind);
+fieldname = fieldname_run{runind};
 
 % store linear model created in current run in struct. lm
 lm.(fieldname).X_lm = X_lm;
@@ -153,7 +161,7 @@ lm.(fieldname).X_lm = X_lm;
 % PART (III): Model Estimation
 
 % get full path to processed image file in current run
-input_file = [directname, filesep, proc_filename{runind}];
+input_file = [proc_file_path{runind}];
 
 % format full paths of output files in current run
 output_file_base = cell(numel(event_def_str{runind}, 1));
@@ -168,12 +176,17 @@ cont_mat = eye(numel(evti{runind}));   % assign 1s along main diagonal
 which_stats = '_mag_t _mag_ef _mag_sd';
 
 % estimate GLM defined earlier using fmrilm
+% char is used to add bank space in case strings don't have same shape
 if modest == 1
     fmrilm(input_file, char(output_file_base), X_lm, cont_mat, [], which_stats);
 end
 
+% get current time when model is estimated
+curtime = clock;
+
 % print message to terminal
-sprintf('linear model in run%d is estimated', runind)
+sprintf('linear model in %s is estimated at %d:%d:%.0f', fieldname_run{runind}, ...
+    curtime(4), curtime(5), curtime(6))
 
 end   % end for runind = 1:numsess
 
@@ -194,8 +207,9 @@ end   % end for runind = 1:numsess
 % get number of conditions established in all runs from term struct.
 num_cond_tot = 0;
 for i = 1:numsess
-    fieldname = sprintf('run%d', i);
-    num_cond_tot = num_cond_tot + terms.terms.(fieldname).results.num_cond;
+    fieldname_run = fieldnames(terms.terms);
+%     fieldname = sprintf('run%d', i);
+    num_cond_tot = num_cond_tot + terms.terms.(fieldname_run{i}).results.num_cond;
 end
 
 % assemble arrays of input fmri effect files (*_ef and *_sd.nii)
@@ -255,7 +269,7 @@ for i = 1:numel(event_def)
     event_def_all = [event_def_all event_def{i}];
 end
 
-% create contrast matrix: each row representing a combinatio of events
+% create contrast matrix: each row representing a combination of events
 cont_mat_all_runs = [];
 
 % use the unique event_def{i} for comparing with other cells in
@@ -292,7 +306,7 @@ X_multistat = cont_mat_all_runs';
 % contrasts for stat. images. e.g. for [1 0 ... 0], it picks out the first 
 % column of X_multistat.
 % num. of col. in X_multistat equals to num. of rows in contrast_multistat
-contrast_multistat = eye(numsess);   % identity matrix 
+contrast_multistat = eye(length(uni_event_def));   % identity matrix 
 
 % create contrast name strings for all runs
 cont_name_str_all_runs = cell(length(uni_event_def), 1);   % initialize array and preallocating memory
