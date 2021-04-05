@@ -83,10 +83,14 @@ end
 
 % similarly, event types represented by input files are shown in the
 % filenames, e.g. in 'Run1_EV2.txt', onset times of event type 2 are stored
-% get indices required in filename, \d denotes numeric digit, \d+ denotes
-% matching consecutive numeric digits as many as possible, for cases like _EV25.txt
+% get indices required in filename, \d denotes numeric digit, \w* denotes
+% matching any group (more than or equal to 1 char) comprised of
+% alphabetic, numeric, or underscore character, all the way to the char before
+% '.txt', the file extension, for cases like _EV2_5.txt,
+%
 sind_event = regexp(file_name_event, '_EV\d', 'end');   % start index of event type
-eind_event = regexp(file_name_event, 'EV\d+', 'end');   % end index of event type
+eind_event = regexp(file_name_event, 'EV\w*', 'end');   % end index of event type
+% eind_event = regexp(file_name_event, 'EV\d+', 'end');   % end index of event type
 
 % assign event defintion to array eventdef (numeric) and eventdefstr (str)
 eventdef = cell(1, numel(uni_runnum));   % initialize eventdef array (numeric)
@@ -95,12 +99,19 @@ eventdefstr = cell(1, numel(uni_runnum));   % initialize eventdefstr array (str)
 rowind = 1;   % initialize rowind as 1
 for i = 1:numel(uni_runnum)   % for each unqiue event
     for j = 1:numevents{i}   % for each event type identified in each unique run
-        % use rowind to access the corresponding entry in file_name_event
-        % extract event type in filename, convert from str to numeric
-        eventdef{i}{j} = str2num(file_name_event{rowind}(sind_event{rowind}:eind_event{rowind}));  
-        % assemble event def. string, get rowind^th eventdef, and corresponding
-        % run number 
-        eventdefstr{i}{j} = ['type_', num2str(eventdef{i}{j}), '_run_', runnum{rowind}];
+        % use rowind to access the corresponding entry in file_name_event,
+        % extract event type in filename
+        strext = file_name_event{rowind}(sind_event{rowind}:eind_event{rowind}); 
+        % replace '_' with ' ' (if there is such pattern) 
+        % and convert from str to numeric
+        strextrep = strrep(strext, '_', ' ');   % str replaced
+        eventdef{i}{j} = str2num(strextrep);   % convert from str to numeric
+        
+        % get place holder by number of digits found in current event def
+        placestr = repmat('%d_', 1, length(eventdef{i}{j}));   
+        % format event def. into string, get rowind^th run number,
+        eventdefstr{i}{j} = ['type_', sprintf(placestr, eventdef{i}{j}),...
+            'run_', runnum{rowind}];
         rowind = rowind + 1;   % increment rowind by 1
     end
 end
