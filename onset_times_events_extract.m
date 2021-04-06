@@ -8,7 +8,7 @@ clear all
 % ** use this script only if event times in each run are already reported
 % in separate .txt file, otherwise, use onset_times_events.m **
 % The only diff. in output struct. generated between the two scripts is
-% that a field named "durations" are included in the output struct.
+% that a field named "durations" is included in the output struct.
 % produced by this script (onset_times_event_extract.m), while that is 
 % excluded when using the other script (onset_times_event_extract.m),
 % becasue event durations reported in input files applicable to this script
