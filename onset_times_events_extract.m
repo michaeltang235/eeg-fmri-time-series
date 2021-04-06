@@ -5,17 +5,30 @@ clear all
 % named terms that stores the times in seconds for all runs interested
 % in a .mat file.
 
+% ** use this script only if event times in each run are already reported
+% in separate .txt file, otherwise, use onset_times_events.m **
+% The only diff. in output struct. generated between the two scripts is
+% that a field named "durations" are included in the output struct.
+% produced by this script (onset_times_event_extract.m), while that is 
+% excluded when using the other script (onset_times_event_extract.m),
+% becasue event durations reported in input files applicable to this script
+% are sometimes non-zero.
+
 % Remarks:
-% (i) use this script only if event times in each run are already reported
-% in separate .txt file, otherwise, use onset_times_events.m
-% (ii) filename of event times file must follow the format of 'Run%d_EV%d.txt',
+% (i) filename of event times file must follow the format of 'Run%d_EV%d.txt',
 % where the first '%d' denotes run number and the second '%d' denotes event
 % types interested
-% (iii) each input file represent one event type. If a run has 2 event files, 
+% (ii) each input file represent one event type. If a run has 2 event files, 
 % then there are 2 event types in that run.
-% (iv) event onset times must be stored in first column of input file
-% (v) times reported in input files are relative to fmri trigger
+% (iii) event onset times must be stored in first column of input file
+% (iv) times reported in input files are relative to fmri trigger
+% (v) event durations are assumed to be zero (close to instantaneous),
+% unless otherwise specified in col. 3 of input files
 
+% Updates: April 6, 2021, allowed non-zero event durations to be included in
+% output struct. If col. 3 of input files have value of 1, event durations
+% are assumed to be zero, otherwise, values reported in that col. are
+% extracted and saved as the event durations required.
 %---------------------------------------------------------------------------
 %---------------------------------------------------------------------------
 % BEGIN USER INPUT
@@ -135,9 +148,11 @@ for entry = 1:length(uni_runnum)   % for each unique run number
     numevents{entry} = nnz(ismember(runnum, uni_runnum{entry}));
 end
 
-% create onset times array (ontimesar) to store event onset times reported
-% in each input file, whose 1st column stores onset times interested
+% create onset times array (ontimesar) and duration array (duratar) to store
+% event onset times (col. 1) and event durations (col. 2) reported, repsectively,
+% in each input file
 ontimesar = cell(1, numel(uni_runnum));   % initialize cell array ontimesar
+duratar = cell(1, numel(uni_runnum));   % initialize cell array duratar
 
 % initialize rownumber as 1 for accessing entry in file_path cell array
 rownum = 1;  
@@ -149,6 +164,16 @@ for i = 1:numel(uni_runnum)   % for each unique run number
         inputfile_ar = readcell(file_path{rownum});  
         % assign 1st column of file to ontimesar, convert from cell to double
         ontimesar{i}{j} = cell2mat(inputfile_ar(:,1));
+        
+        % if entries in col. 2 aren't equal to 1, extract corresponding
+        % values reported and save them as double,
+        % otherwise, zero event duration is assumed
+        if inputfile_ar{1,2} ~= 1   % if entries in col. 2 aren't equal to 1
+            duratar{i}{j} = cell2mat(inputfile_ar(:,2));   % extract values
+        else   % if col. 2 contains entries of value of only 1
+            duratar{i}{j} = zeros(numel(inputfile_ar(:,2)), 1);   % assume zero durations
+        end
+       
         rownum = rownum + 1;   % increment rownum by 1
     end
 end
@@ -164,6 +189,7 @@ for i = 1:numel(uni_runnum)   % for each unique run number
     terms.(fieldname).results.event_def = eventdef{i};   % defition of each event for spec. run
     terms.(fieldname).results.onsettimes = ontimesar{i};   % onset times recorded in dataset provided
     terms.(fieldname).results.evti = ontimesar{i};   % initial time (seconds) of each event in each run, the same as ontimesar
+    terms.(fieldname).results.durations = duratar{i};  % event durations (seconds)
 end
 
 % to keep struct. format consistent with terms struct. created using
