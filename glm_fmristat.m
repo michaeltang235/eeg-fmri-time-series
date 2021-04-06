@@ -20,8 +20,13 @@ clear all
 
 % Updates:
 % Apr. 1, 2021: use full path instead of fullfile func. to access processed
-% images, run numbers displayed are obtained directly from fields within
+% images, also, run numbers displayed are obtained directly from fields within
 % struct. terms
+% Apr. 6, 2021: added code to extract event durations from terms struct. to
+% account for non-instantaneous event durations reported in input files. If
+% the field 'durations' exists in terms struct., then extract values,
+% otherwise, assign array of same size as evti to durations array with 
+% a value of zero, which is the assumed standard for instantaneous events.
 %---------------------------------------------------------------------------
 %---------------------------------------------------------------------------
 % BEGIN USER INPUT
@@ -98,7 +103,7 @@ fieldname_run = fieldnames(terms.terms);
 
 % print processed image info. to console
 for i = 1:numsess
-    sprintf('%s, numimage = %d, numslices = %d, TR = %f', fieldname_run{i}, numimage{i}, numslices, TR)
+    sprintf('In %s, numimage = %d, numslices = %d, TR = %f', fieldname_run{i}, numimage{i}, numslices, TR)
 end
 
 % if no onset times are recorded for an event, an empty matrix is assigned
@@ -106,14 +111,30 @@ end
 % (i): def. each event (str) identified in each run
 % (ii) def. of each event (i.e. in matrix) identified in each run
 % (iii): onset times of each evenet identified in each run
+% (iv): durations of each event type identifed in each run
 event_def_str = cell(1, numsess);   % initialize event_def_str cell array
 event_def = cell(1, numsess);   % initialize event_def cell array
 evti = cell(1, numsess);   % intialize evti cell array
+duration = cell(1, numsess);   % initialize durations cell array
+
 for i = 1:numsess  
     % get non-empty event def. and onset times (evti)
     event_def_str{i} = terms.terms.(fieldname_run{i}).results.event_def_str;
     event_def{i} = terms.terms.(fieldname_run{i}).results.event_def;
     evti{i} = terms.terms.(fieldname_run{i}).results.evti;
+    
+    % check if 'durations' is an existing field in terms, 
+    % if so, extract values from struct., otherwise, assign array of same 
+    % size as evti with a value of zero,
+    % which is the assumed standard (instantaneous events)
+    if isfield(terms.terms.(fieldname_run{i}).results, 'durations')   % if field exists
+        durations{i} = terms.terms.(fieldname_run{i}).results.durations;  % get values from struct.
+    else   % if field doesn't exist
+        for j = 1:numel(evti{i})   % for each event type in current run
+            durations{i}{j} = zeros(numel(evti{i}{j}), 1);   % assign value of zero
+        end
+    end
+    
 end
 
 % END PART (I): PRELIMINARY
@@ -142,12 +163,16 @@ event_matrix = [];  % initialize empty event_matrix
 
 % loop through each event type in evti array in current run, append 
 % relevant info. to matrix vertically
+
 for i = 1:numel(evti{runind})    % for each event type in current run
     event_matrix = [event_matrix; [i*ones(numel(evti{runind}{i}), 1) ...
-        evti{runind}{i} zeros(numel(evti{runind}{i}), 1)]];
+        evti{runind}{i} durations{runind}{i}]];
 end
 
 % get fmri design matrix (GLM) using fmrilm
+% dim 1: frames, dim 2: response var., 
+% dim 3: stimuli convolved with hrf, hrf deriv, spectral basis func., so on
+% dim 4: slice, refer to documentation for details
 X_lm = fmridesign(frametimes, relslicetimes, event_matrix);
 
 % create fieldname for current run, which will be used in struct. lm
@@ -332,8 +357,8 @@ output_file_base_multistat = char(contrast_name_base_multi);
 fwhm_varatio = Inf;
 
 % call multistat function, specify to output t stat. images ('_t')
-multistat(input_files_ef, input_files_sd, [], [], X_multistat, ...
-    contrast_multistat, output_file_base_multistat, '_t', fwhm_varatio);
+% multistat(input_files_ef, input_files_sd, [], [], X_multistat, ...
+%     contrast_multistat, output_file_base_multistat, '_t', fwhm_varatio);
 
 % END PART (IV_C): assemble remaining input arg. and execute multistat 
 %------------------------------------
