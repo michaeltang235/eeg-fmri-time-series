@@ -11,6 +11,10 @@ close all
 % format that electrode name and its x, y, and z coordinates are stored 
 % in columns 2 to 5.
 
+% Updates: Apr. 6, 2021, updated code for cleaning cell array read from 
+% input file of electrode contacts, in that only include cells with both
+% name tags and their coordinates present in electrode_cleaned array
+
 tic 
 %---------------------------------------------------------------------------
 %---------------------------------------------------------------------------
@@ -121,7 +125,11 @@ electar_cleaned = {};
 % is NOT missing, assign info. of that row to electar_cleaned array
 rownum = 1;   % initialize row number as 1
 for i = 1:size(electar, 1)   % for each row in electar
-    if ~ismissing(electar{i, 2})   % if name tag is found
+    % if name tag is found or if coordinates are not missing
+    % ismissing finds missing entries in array, have to separtely evaluate
+    % col. 2 and col. 3:5, as they are of different data types, 
+    % any means if any of the entries is non-zero or logical 1
+    if any(~ismissing(electar{i, 2})) && any(~ismissing([electar{i, 3:5}]))
         electar_cleaned(rownum, :) = electar(i,:);   % assign relevant info. to array
         rownum = rownum + 1;   % increment row number by 1
     end
