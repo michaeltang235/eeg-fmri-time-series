@@ -25,10 +25,11 @@ clear all
 % (v) event durations are assumed to be zero (close to instantaneous),
 % unless otherwise specified in col. 3 of input files
 
-% Updates: April 6, 2021, allowed non-zero event durations to be included in
-% output struct. If col. 3 of input files have value of 1, event durations
-% are assumed to be zero, otherwise, values reported in that col. are
-% extracted and saved as the event durations required.
+% Updates: April 6, 2021, updated code such that event durations are included 
+% in output struct., whether they are zero or not. If entries in col. 3 of
+% input files have a value of 1, event durations are assumed to be zero, 
+% otherwise, values reported in that col. are extracted and saved as 
+% the event durations required.
 %---------------------------------------------------------------------------
 %---------------------------------------------------------------------------
 % BEGIN USER INPUT
