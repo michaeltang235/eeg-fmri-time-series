@@ -19,7 +19,7 @@ file_struct = dir(fullfile(directname, filename_format));
 % if no file is found, an empty struct is formed,
 % display warning message if no file is found
 if isempty(file_struct)   % check if struct. is empty
-    disp('warning! no file is found.')
+    disp('warning! when using get_path, no file is found.')
 end
 
 % each file found is given a dimension in struct, get number of
