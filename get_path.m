@@ -16,8 +16,9 @@ function [numfile, file_path, file_name] = get_path(directname, filename_format)
 % in file_struct
 file_struct = dir(fullfile(directname, filename_format));  
 
+% if no file is found, an empty struct is formed,
 % display warning message if no file is found
-if isempty(file_struct)
+if isempty(file_struct)   % check if struct. is empty
     disp('warning! no file is found.')
 end
 
