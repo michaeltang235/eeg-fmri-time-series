@@ -16,7 +16,7 @@ subnum = '14';
 directname = ['/work/levan_lab/mtang/fmri_project/', 'sub', subnum]; 
 %directname = ['C:\Users\siumichael.tang\Downloads\fmri_project\', 'sub', subnum];
 % directname = ['/Users/michaeltang/Downloads/fmri_project/', 'sub', subnum, '_imthres0_exmask'];
-filename_format = '3danat*.nii';   % name of anatomical 3d image
+filename_format = '3*anat*.nii';   % name of anatomical 3d image
 
 % enter final voxel size in (mm)
 voxelsize = [1 1 1];
