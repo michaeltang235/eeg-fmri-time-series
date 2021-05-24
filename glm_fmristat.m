@@ -35,7 +35,8 @@ clear all
 subnum = '14';
 
 % enter path to directory where all input files are located
-directname = ['C:\Users\siumichael.tang\Downloads\fmri_project\', 'sub', subnum];
+directname = ['/work/levan_lab/mtang/fmri_project/', 'sub', subnum];
+%directname = ['C:\Users\siumichael.tang\Downloads\fmri_project\', 'sub', subnum];
 % directname = ['/Users/michaeltang/Downloads/fmri_project/', 'sub', subnum, '_imthres0_exmask'];
 
 % enter number of runs (num. of processed .nii file = % number of session(s))
@@ -48,8 +49,11 @@ proc_filename_format = 'swraRun*.nii';   % wildcard char is added for searching 
 directname_mat = [directname, filesep, 'matrices'];
 onset_times_filename = ['onset_times_events_extract_', 'sub', subnum, '.mat'];   % onset times array for all runs
 
+% enter path of fmristat toolbox
+fmristat_path = '/home/siumichael.tang/fmristat';
+
 % enter if step of model estimation should be executed (takes a long time)
-modest = 0;
+modest = 1;
 
 % END USER INPUT
 %---------------------------------------------------------------------------
@@ -140,6 +144,9 @@ end
 % END PART (I): PRELIMINARY
 %---------------------------------------------------------------------------
 % PART (II): Model Specification
+
+% add path of fmristat to current directory
+addpath(fmristat_path);
 
 % create struct. lm for storing linear model created in each run
 lm = struct;
@@ -357,8 +364,8 @@ output_file_base_multistat = char(contrast_name_base_multi);
 fwhm_varatio = Inf;
 
 % call multistat function, specify to output t stat. images ('_t')
-% multistat(input_files_ef, input_files_sd, [], [], X_multistat, ...
-%     contrast_multistat, output_file_base_multistat, '_t', fwhm_varatio);
+multistat(input_files_ef, input_files_sd, [], [], X_multistat, ...
+	contrast_multistat, output_file_base_multistat, '_t', fwhm_varatio);
 
 % END PART (IV_C): assemble remaining input arg. and execute multistat 
 %------------------------------------
