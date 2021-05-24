@@ -47,7 +47,7 @@ proc_filename_format = 'swraRun*.nii';   % wildcard char is added for searching 
 
 % format directory and filename of onset times array and prelim. results
 directname_mat = [directname, filesep, 'matrices'];
-onset_times_filename = ['onset_times_events_extract_', 'sub', subnum, '.mat'];   % onset times array for all runs
+onset_times_filename = ['onset_times_events_', 'sub', subnum, '.mat'];   % onset times array for all runs
 
 % enter path of fmristat toolbox
 fmristat_path = '/home/siumichael.tang/fmristat';
