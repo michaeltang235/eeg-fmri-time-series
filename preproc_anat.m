@@ -10,13 +10,13 @@ close all
 % BEGIN USER INPUT
 
 % enter subject number (str, e.g. sub31, sub27, ...)
-subnum = '14';
+subnum = '27';
 
 % enter path to directory where all input files are located
 directname = ['/work/levan_lab/mtang/fmri_project/', 'sub', subnum]; 
 %directname = ['C:\Users\siumichael.tang\Downloads\fmri_project\', 'sub', subnum];
 % directname = ['/Users/michaeltang/Downloads/fmri_project/', 'sub', subnum, '_imthres0_exmask'];
-filename = '3danat.nii';   % name of anatomical 3d image
+filename_format = '3danat*.nii';   % name of anatomical 3d image
 
 % enter final voxel size in (mm)
 voxelsize = [1 1 1];
@@ -30,8 +30,12 @@ spm_path = '/home/siumichael.tang/spm12';
 %---------------------------------------------------------------------------
 % Preliminary:
 
-% get full path of image file
-filename_path = fullfile(directname, append(filename, ',1'));
+% get full path of input anatomical image file using get_path
+[~, file_path, ~] = get_path(directname, filename_format);
+
+% append '1' at the end of file_path, denoting the first image to be read
+% by spm
+filename_path = [file_path{:}, ',1'];
 
 % format path to tissue probability map (tpm image) stored in SPM package
 tpm_path = [spm_path, filesep, 'tpm', filesep, 'TPM.nii'];
