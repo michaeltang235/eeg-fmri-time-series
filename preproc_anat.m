@@ -13,7 +13,8 @@ close all
 subnum = '14';
 
 % enter path to directory where all input files are located
-directname = ['C:\Users\siumichael.tang\Downloads\fmri_project\', 'sub', subnum];
+directname = ['/work/levan_lab/mtang/fmri_project/', 'sub', subnum]; 
+%directname = ['C:\Users\siumichael.tang\Downloads\fmri_project\', 'sub', subnum];
 % directname = ['/Users/michaeltang/Downloads/fmri_project/', 'sub', subnum, '_imthres0_exmask'];
 filename = '3danat.nii';   % name of anatomical 3d image
 
@@ -21,7 +22,8 @@ filename = '3danat.nii';   % name of anatomical 3d image
 voxelsize = [1 1 1];
 
 % enter full path to spm package
-spm_path = 'C:\Users\siumichael.tang\Downloads\spm12';
+spm_path = '/home/siumichael.tang/spm12';
+%spm_path = 'C:\Users\siumichael.tang\Downloads\spm12';
 
 % END USER INPUT
 %---------------------------------------------------------------------------
@@ -33,6 +35,9 @@ filename_path = fullfile(directname, append(filename, ',1'));
 
 % format path to tissue probability map (tpm image) stored in SPM package
 tpm_path = [spm_path, filesep, 'tpm', filesep, 'TPM.nii'];
+
+% add path of spm to current directory
+addpath(spm_path);
 
 % % initialize spm module without graphical interface
 spm('defaults','fmri');

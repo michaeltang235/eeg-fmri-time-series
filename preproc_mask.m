@@ -13,7 +13,8 @@ close all
 subnum = '14';
 
 % enter path to directory where all input files are located
-directname = ['C:\Users\siumichael.tang\Downloads\fmri_project\', 'sub', subnum];
+directname = ['/work/levan_lab/mtang/fmri_project/', 'sub', subnum];
+% directname = ['C:\Users\siumichael.tang\Downloads\fmri_project\', 'sub', subnum];
 % directname = ['/Users/michaeltang/Downloads/fmri_project/', 'sub', subnum, '_imthres0_exmask'];
 
 % format filename of input mask file
@@ -23,7 +24,8 @@ filename_mask = 'EPI_bet_mask.nii';   % name of mask image
 voxelsize = [3.75 3.75 3.75];
 
 % enter full path to spm package
-spm_path = 'C:\Users\siumichael.tang\Downloads\spm12';
+spm_path = '/home/siumichael.tang/spm12';
+% spm_path = 'C:\Users\siumichael.tang\Downloads\spm12';
 
 % END USER INPUT
 %---------------------------------------------------------------------------
@@ -41,6 +43,9 @@ file_path_imgtoalignto = [spm_path, filesep, 'toolbox', filesep, ...
 
 % format path to tissue probability map (tpm image) stored in SPM package
 tpm_path = [spm_path, filesep, 'tpm', filesep, 'TPM.nii'];
+
+% add path of spm to current working directory
+addpath(spm_path);
 
 % % initialize spm module without graphical interface
 spm('defaults','fmri');

@@ -52,7 +52,8 @@ close all
 subnum = '14';
 
 % enter path to directory where all input files are located
-directname = ['C:\Users\siumichael.tang\Downloads\fmri_project\', 'sub', subnum];
+directname = ['/work/levan_lab/mtang/fmri_project/', 'sub', subnum];
+%directname = ['C:\Users\siumichael.tang\Downloads\fmri_project\', 'sub', subnum];
 % directname = ['/Users/michaeltang/Downloads/fmri_project/', 'sub', subnum, '_imthres0_exmask'];
 
 % enter number of runs (num. of .nii file = % number of session(s))
@@ -71,7 +72,8 @@ voxelsize = [3.75 3.75 3.75];
 unitdesign = 'secs';   % unit of design matrix
 
 % enter full path to spm package
-spm_path = 'C:\Users\siumichael.tang\Downloads\spm12';
+spm_path = '/home/siumichael.tang/spm12';
+%spm_path = 'C:\Users\siumichael.tang\Downloads\spm12';
 
 % sometimes, we are interested in checking the contrast matrix but not 
 % running any pre-processing steps on image dataset, 
@@ -129,7 +131,8 @@ TR = imginfo{1}.raw.pixdim(5);
 
 % print image info. to console
 for i = 1:numsess
-sprintf('run%d, numimage = %d, numslices = %d, TR = %f', i, numimage{i}, numslices, TR)
+sprintf('In %s, numimage = %d, numslices = %d, TR = %f', ...
+    file_name_runs{i}, numimage{i}, numslices, TR)
 end
 
 % set slice acquisition order and reference slice
@@ -195,6 +198,9 @@ tpm_path = [spm_path, filesep, 'tpm', filesep, 'TPM.nii'];
 
 % PART (II): SPM script
 
+% add spm of spm to current  directory
+addpath(spm_path);
+
 % initialize spm module without graphical interface
 spm('defaults','fmri');
 spm_jobman('initcfg');
@@ -235,7 +241,7 @@ matlabbatch{3}.spm.spatial.normalise.estwrite.subj.resample = filename_path_norm
 
 matlabbatch{3}.spm.spatial.normalise.estwrite.eoptions.biasreg = 0.0001;
 matlabbatch{3}.spm.spatial.normalise.estwrite.eoptions.biasfwhm = 60;
-matlabbatch{3}.spm.spatial.normalise.estwrite.eoptions.tpm = tpm_path;
+matlabbatch{3}.spm.spatial.normalise.estwrite.eoptions.tpm = {tpm_path};
 matlabbatch{3}.spm.spatial.normalise.estwrite.eoptions.affreg = 'mni';
 matlabbatch{3}.spm.spatial.normalise.estwrite.eoptions.reg = [0 0.001 0.5 0.05 0.2];
 matlabbatch{3}.spm.spatial.normalise.estwrite.eoptions.fwhm = 0;
@@ -255,89 +261,6 @@ matlabbatch{4}.spm.spatial.smooth.im = 0;
 matlabbatch{4}.spm.spatial.smooth.prefix = 's';
 % % end Smoothing
 % % %-------------------------------------------------
-% % % FMRI model specification:
-% % % assign variables to matlabbatch array
-% matlabbatch{1}.spm.stats.fmri_spec.dir = {directory_path_spmmat};
-% matlabbatch{1}.spm.stats.fmri_spec.timing.units = unitdesign;
-% matlabbatch{1}.spm.stats.fmri_spec.timing.RT = TR;
-% matlabbatch{1}.spm.stats.fmri_spec.timing.fmri_t = numslices;
-% matlabbatch{1}.spm.stats.fmri_spec.timing.fmri_t0 = refslice;
-% 
-% % %----------------------------
-% % % loop through each session and each event
-% for sessind = 1: numsess
-%     for eventind = 1:numcond{sessind}
-%     matlabbatch{1}.spm.stats.fmri_spec.sess(sessind).scans = filename_path_model{sessind};
-%     matlabbatch{1}.spm.stats.fmri_spec.sess(sessind).cond(eventind).name = event_def_str{sessind}{eventind};
-%     matlabbatch{1}.spm.stats.fmri_spec.sess(sessind).cond(eventind).onset = evti{sessind}{eventind};
-%     matlabbatch{1}.spm.stats.fmri_spec.sess(sessind).cond(eventind).duration = 0;
-%     matlabbatch{1}.spm.stats.fmri_spec.sess(sessind).cond(eventind).tmod = 0;
-%     matlabbatch{1}.spm.stats.fmri_spec.sess(sessind).cond(eventind).pmod = struct('name', {}, 'param', {}, 'poly', {});
-%     matlabbatch{1}.spm.stats.fmri_spec.sess(sessind).cond(eventind).orth = 1;
-%     end
-%     
-%     matlabbatch{1}.spm.stats.fmri_spec.sess(sessind).multi = {''};
-%     matlabbatch{1}.spm.stats.fmri_spec.sess(sessind).regress = struct('name', {}, 'val', {});
-%     matlabbatch{1}.spm.stats.fmri_spec.sess(sessind).multi_reg = {''};
-%     matlabbatch{1}.spm.stats.fmri_spec.sess(sessind).hpf = 128;
-% end
-% % %----------------------------
-% 
-% matlabbatch{1}.spm.stats.fmri_spec.fact = struct('name', {}, 'levels', {});
-% matlabbatch{1}.spm.stats.fmri_spec.bases.hrf.derivs = [0 0];
-% matlabbatch{1}.spm.stats.fmri_spec.volt = 1;
-% matlabbatch{1}.spm.stats.fmri_spec.global = 'None';
-% matlabbatch{1}.spm.stats.fmri_spec.mthresh = imthresh;
-% matlabbatch{1}.spm.stats.fmri_spec.mask = {filename_path_expmask};
-% matlabbatch{1}.spm.stats.fmri_spec.cvi = 'AR(1)';
-% % 
-% % % end FMRI model specification:
-% %-------------------------------------------------
-% % % Model estimation:
-% % matlabbatch{2}.spm.stats.fmri_est.spmmat = {filename_path_modelest};
-% % matlabbatch{2}.spm.stats.fmri_est.write_residuals = 0;
-% % matlabbatch{2}.spm.stats.fmri_est.method.Classical = 1;
-% % % end Model estimation
-% % % -------------------------------------------------
-% % % Contrast manager: (only run this step if runcontrast == 1)
-% if run_contrast == 1
-%     
-% matlabbatch{3}.spm.stats.con.spmmat = {filename_path_contman};
-% 
-% % use loop to assign required variables (i.e. name, contrast) to matlabbatch array
-% for connum = 1:size(cont_mat, 1)   % through each conditrast
-%     matlabbatch{3}.spm.stats.con.consess{connum}.tcon.name = cont_name_str{connum};
-%     matlabbatch{3}.spm.stats.con.consess{connum}.tcon.weights = cont_mat(connum,:);
-%     matlabbatch{3}.spm.stats.con.consess{connum}.tcon.sessrep = 'none';
-% end
-% 
-% matlabbatch{3}.spm.stats.con.delete = 1;
-% 
-% % % end Contrast manager
-% % %-------------------------------------------------
-% % % Results report
-% 
-% matlabbatch{4}.spm.stats.results.spmmat = {filename_path_resultsrep};
-% 
-% % use loop to assign required variables to matlabbatch array, applying
-% % contrast to each run
-% for i = 1:size(cont_mat, 1)
-% matlabbatch{4}.spm.stats.results.conspec(i).titlestr = '';
-% matlabbatch{4}.spm.stats.results.conspec(i).contrasts = i;
-% matlabbatch{4}.spm.stats.results.conspec(i).threshdesc = 'FWE';
-% matlabbatch{4}.spm.stats.results.conspec(i).thresh = 0.05;
-% matlabbatch{4}.spm.stats.results.conspec(i).extent = 0;
-% matlabbatch{4}.spm.stats.results.conspec(i).conjunction = 1;
-% matlabbatch{4}.spm.stats.results.conspec(i).mask.none = 1;
-% end
-% 
-% matlabbatch{4}.spm.stats.results.units = 1;
-% matlabbatch{4}.spm.stats.results.export{1}.ps = true;
-% 
-% end   % end if runcontrast == 1
-% 
-% % % end Result report
-% % % -------------------------------------------------
 
 % % END PART (II): SPM script
 % %-----------------------------------------------------------------------------
