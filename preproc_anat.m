@@ -10,7 +10,7 @@ close all
 % BEGIN USER INPUT
 
 % enter subject number (str, e.g. sub31, sub27, ...)
-subnum = '27';
+subnum = '14';
 
 % enter path to directory where all input files are located
 directname = ['/work/levan_lab/mtang/fmri_project/', 'sub', subnum]; 
