@@ -15,7 +15,7 @@
 % SIGNAL_NOISE_FILT is similar to SIGNAL_SEG, but time series in 2nd layer
 % are noise-removed using Chebyshev type 1 filter
 
-function [signal_seg, signal_noise_filt ] = seg_noise_filt(signal_input, tr, window_size)
+function [signal_seg, signal_noise_filt] = seg_noise_filt(signal_input, tr, window_size)
 
 % window_size = 60;   % in seconds
 % tr = 1.5;   % repetition time, in seconds
@@ -45,41 +45,51 @@ for i = 1:ni   % for each voxel in x-dir.
             % squeeze to remove dim. of length 1
             signal_req = squeeze(signal_input(i, j, k, :));   
             
-            % create time axis spanning the entire time series of siganl interested
-            taxis = (1:length(signal_req))*tr;
+            % create time axis (slice-time corrected) spanning the entire 
+            % time series of siganl interested
+            % 1st image is shifted to t=0 (s), while the last image is
+            % shifted to t_end-1 (s)
+            taxis = (0:length(signal_req) - 1)*tr;
             
-            % initialize indices for segmentation of time series at current
-            % voxel
-            ti_ind = 1;   % index of initial time
-            seg_ind = 1;   % index of segment
+            % check if time axis is long enough to ouput meaningful
+            % statistics, if not, return function
+            % for window size of 60 s, time series has to be at least 10
+            % mins long
+            if taxis(end) < 10*60
+                return
+            end
             
-            % get number of segments expected to form from time series
-            num_seg = taxis(end)/window_size;  
+            % create arrays indicating time points of each segment
+            ti_list = 0;   % list of ti (initial time) 
+            tf_list = window_size;   % list of tf (final time)
+            while tf_list(end) + window_size/2 < taxis(end)   % while tf < taxis(end)
+                ti_list = [ti_list ti_list(end) + window_size/2];   % update lists
+                tf_list = [tf_list tf_list(end) + window_size/2];
+            end
+            
+            % get number of segments expected to form from time series, 
+            num_seg = numel(tf_list);  
 
             % initialize 2nd layers of arrays
             signal_seg{i, j, k} = cell(1, num_seg);   % segmented signal
             signal_noise_filt{i, j, k} = cell(1, num_seg);   % noise-filted seg. of signal
             
-            % loop through each segment, find the index of final time (tf) in
-            % taxis, then extract points within the segment using the indices
-            for seg = 1:num_seg
+            % loop through each segment, find the indices of ti (intiial time)
+            % tf (final time) in taxis, then extract points within 
+            % the segment using the indices
+            for seg_ind = 1:num_seg
                 
-                % find index of tf in taxis
-                tf_ind = find(taxis == seg_ind*window_size); 
+                % find indices of ti and tf of current segment in taxis
+                ti_ind = find(taxis == ti_list(seg_ind));   % index of ti of cur. seg.
+                tf_ind = find(taxis == tf_list(seg_ind));   % index of tf of cur. seg.
                 
                 % extract points within the segment (ti:tf), assign data to
-                % current segment of signal_seg array
+                % current segment of of current voxel in signal_seg array
                 signal_seg{i, j, k}{seg_ind} = signal_req(ti_ind:tf_ind);
                 
                 % apply bandpass filter (filtfilt) to remove noise from
                 % current segment of signal
                 signal_noise_filt{i, j, k}{seg_ind} = filtfilt(b, a, signal_req(ti_ind:tf_ind));
-            
-                % increment segment index by 1 for the next one
-                seg_ind = seg_ind + 1;
-            
-                % assign index of tf to index of ti for the next segment
-                ti_ind = tf_ind;
                 
             end   % end for seg = 1:num_seg
         
