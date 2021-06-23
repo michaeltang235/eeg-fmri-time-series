@@ -7,8 +7,8 @@
 % In other words, this function creates a time series of avg. signal in
 % every segment established.
 
-%FUNCTION SIG_SEGMENT_AVG = SEGMENT_AVG(INPUT_SIGNAL, REG_MARK,
-%NUM_NONZERO)
+% FUNCTION SIG_SEGMENT_AVG = SEGMENT_AVG(INPUT_SIGNAL, REG_MARK,
+% NUM_NONZERO)
 % INPUT_SIGANL is an array of input siganl of interest
 % REG_MASK is an image of regional mask
 % NUM_NONZERO is number of nonzero entries in the regional mark

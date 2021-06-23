@@ -60,8 +60,8 @@ for i = 1:ni   % for each voxel in x-dim.
             % dim. of length 1
             timeseries = squeeze(signal(i, j, k, :));
             
-            % solve system of eq. (Ax = b) for beta, where A is the matrix
-            % of motion regressors and b is the time series
+            % solve system of eq. (A*beta = y) for beta, where A is the matrix
+            % of motion regressors and y is the time series
             beta = reg_mo\timeseries;
             
             % comput the residuals by subtracting fitted regressors

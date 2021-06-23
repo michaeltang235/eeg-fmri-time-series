@@ -24,7 +24,7 @@ fs = 1/tr; % sampling frequency, in Hz
 % use Chebyshev Type 1 bandpass filter to allow freq. compo. btw. 
 % [1/window size and 0.1] Hz to pass through, use cheby1 to get 
 % transfer function coefficients (normalized freqs. are used)
-[b,a] = cheby1(2,0.5,[1/window_size 0.1]/(fs/2));
+[b,a] = cheby1(6,0.5,[1/window_size 0.1]/(fs/2));
 
 % get dimensions of input signal arrray
 ni = size(signal_input, 1);   % dim. in x-dir.
@@ -55,7 +55,7 @@ for i = 1:ni   % for each voxel in x-dir.
             % statistics, if not, return function
             % for window size of 60 s, time series has to be at least 10
             % mins long
-            if taxis(end) < 10*60
+            if taxis(end) < 10*window_size
                 return
             end
             
