@@ -374,11 +374,9 @@ end
 % (ii) spike rates of all target channels, 
 % then get spearman's corr. coeff. (rho_cs_sp) between (i) and (ii)
 
-% get corr. coeff. (spearman's) between corr coeff. btw. channels and spikes rates
-
 % initialize arrays for storing spearman corr. coeff. and their p-values,
 % with 1st layer denoting ref. ch. for which the var. interested are calcu.
-rho_ss_sp = {};   % spearman corr., ''ss' stands for standard dev. and spike rates
+rho_ss_sp = {};   % spearman corr., 'ss' stands for standard dev. and spike rates
 pval_ss_sp = {};   % p-value of spearman corr.
 
 % get spearman corr. coeff. and their p-values btw. (i) and (ii)
@@ -498,7 +496,7 @@ rho_clin_ch_array = {};
 % for each ref. ch., we computed pearson's corr. coeff. for each segment btw.
 % the ref. ch. and every target channel. We then obtained (A) standard
 % devation of all pearson's rho of all segments for every channel pair, 
-% and (B) spike rates of all target channels w.r.t. the ref. After we calculated 
+% and (B) spike rates of all target channels w.r.t. the ref. After, we calculated 
 % (C) spearman's corr. coeff. btw. (A) and (B). 
 % repeat the calcu. for cases when target ch. belong to types other than
 % the ref. 
@@ -555,6 +553,14 @@ opstruct.spikes_ref = spikes_ref;   % spike rates of targ. (2nd layer) channels
 % and their p-values
 opstruct.rho_ss_sp = rho_ss_sp;   % rho_sp btw. (A) and (B)
 opstruct.pval_ss_sp = pval_ss_sp;   % p-val. of rho_sp btw. (A) and (B)
+
+% for each ref. channel, we have sorted std and spike rates by channel
+% types, '_same_type' denotes targ. ch. of types same as the ref., 
+% '_other_type' denotes targ. ch. of types diff. than the ref.
+opstruct.spikes_ref_same_type = spikes_ref_same_type;   % spike rates of pairs with targ. of same type
+opstruct.spikes_ref_other_type = spikes_ref_other_type;   % spike rates of pairs with targ. of other types
+opstruct.std_ref_same_type = std_ref_same_type;   % std of pairs with targ. of same type
+opstruct.std_ref_other_type = std_ref_other_type;   % std of pairs with targ. of other types
 
 % for spearman's corr. coeff. btw. (A) and (B), with target channels
 % belonging to types other than the ref. 

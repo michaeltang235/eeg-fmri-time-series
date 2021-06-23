@@ -48,18 +48,19 @@ for i = 1:ni   % for each voxel in x-dir.
             % create time axis (slice-time corrected) spanning the entire 
             % time series of siganl interested
             % 1st image is shifted to t=0 (s), while the last image is
-            % shifted to t_end-1 (s)
+            % shifted to t_end-tr (s)
             taxis = (0:length(signal_req) - 1)*tr;
             
             % check if time axis is long enough to ouput meaningful
-            % statistics, if not, return function
+            % statistics, if not, return function.
             % for window size of 60 s, time series has to be at least 10
             % mins long
             if taxis(end) < 10*window_size
                 return
             end
             
-            % create arrays indicating time points of each segment
+            % create arrays indicating time points of each segment, with
+            % 50% overlapping btw. neighboring segments
             ti_list = 0;   % list of ti (initial time) 
             tf_list = window_size;   % list of tf (final time)
             while tf_list(end) + window_size/2 < taxis(end)   % while tf < taxis(end)
@@ -84,7 +85,7 @@ for i = 1:ni   % for each voxel in x-dir.
                 tf_ind = find(taxis == tf_list(seg_ind));   % index of tf of cur. seg.
                 
                 % extract points within the segment (ti:tf), assign data to
-                % current segment of of current voxel in signal_seg array
+                % current segment of current voxel in signal_seg array
                 signal_seg{i, j, k}{seg_ind} = signal_req(ti_ind:tf_ind);
                 
                 % apply bandpass filter (filtfilt) to remove noise from
