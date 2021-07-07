@@ -10,7 +10,9 @@
 % FUNCTION KENDALL_W = GET_KENDALL_W(INPUT_SIGNAL, REG_MASK)
 % INPUT SIGNAL is a 4-d signal array
 % REG_MASK is regional mask related to the input signal array, only voxels
-% included in the mask have value of 1
+% included in the mask have value of 1. Both INPUT SIGNAL and REG_MASK must
+% have same lengths in first 3 dimesions, i.e., they are representing the
+% same cluster of voxels.
 % KENDALL_W is the output computed, Kendall's W coefficient
 
 function kendall_w = get_kendall_w(input_signal, reg_mask)
