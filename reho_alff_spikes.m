@@ -134,10 +134,11 @@ opstruct = [];
 
 % check if length of time series is long enough, 256 is used as it's chosen
 % as the width of window in welch's method of power spectral density (psd) 
-% estimate. If not, return to line that called this function, and proceed
-% to next session
-if size(swra_img, 4) < 256
-    return
+% estimate. If so, change value of com_alff to 1 so that the script will
+% calculate ALFF, the relevant corr. coeff., and p-values.
+com_alff = 0;
+if size(swra_img, 4) >= 256
+    com_alff = 1;
 end
 
 % % end Prelim: access variables defined in input array
@@ -175,6 +176,13 @@ ni = size(motion_filtered_img, 1);   % dim. in x
 nj = size(motion_filtered_img, 2);   % dim. in y
 nk = size(motion_filtered_img, 3);   % dim. in z
 
+% initialize arrays of interest
+alff_3d = [];   % map of alff
+mean_alff = [];   % global mean alff
+norm_alff = [];   % normalized alff
+
+if com_alff == 1
+    
 % initialize array for storing alff calculated at each voxel
 alff_3d = zeros(ni, nj, nk);
 
@@ -211,6 +219,8 @@ end
 
 % display message on terminal
 sprintf('normalized alff map calculated')
+
+end   % end if com_alff == 1
 
 % END Part (II): calculate amplitude of low-frequency fluctuations (alff)
 %---------------------------------------------------------------------------
@@ -284,9 +294,12 @@ for i = 1:numel(midpt)   % for each electrode type
         
         % get mean normalized alff in current 3X3X3 box, assign result to
         % 3rd column of current cell within sig_box
-        sig_box{i}{j, 3} = mean(mean(mean(norm_alff(mxyz(1)-1:mxyz(1)+1, ...
-            mxyz(2)-1:mxyz(2)+1, mxyz(3)-1:mxyz(3)+1))));
-
+        if ~isempty(norm_alff)   % if norm_alff array is not empty
+            sig_box{i}{j, 3} = mean(mean(mean(norm_alff(mxyz(1)-1:mxyz(1)+1, ...
+             mxyz(2)-1:mxyz(2)+1, mxyz(3)-1:mxyz(3)+1))));
+        else
+            sig_box{i}{j, 3} = [];   % assign empty value if norm_alff is empty
+        end
     end
 end
 
@@ -328,13 +341,21 @@ spikes_all = spikes.spikes_all;
 % Part (VIII): get spearman's corr. coeff. btw. (i) ReHo and spike rates,
 % and (ii) ALFF and spike rates
 
+% initialize arrays of interest
+rho_reho_spikes = [];
+pval_reho_sp = [];
+rho_malff_spikes = [];
+pval_malff_sp = [];
+
 % get spearman's rho btw. reho and spike rates
 [rho_reho_spikes, pval_reho_sp] = corr([sig_box_all{:, 3}]', [spikes_all{:, 3}]', ...
     'Type', 'Spearman');
 
 % get spearman's rho btw. alff and spike rates
+if ~isempty(norm_alff)
 [rho_malff_spikes, pval_malff_sp] = corr([sig_box_all{:, 4}]', [spikes_all{:, 3}]', ...
     'Type', 'Spearman');
+end
 
 % END Part (VIII): get spearman's corr. coeff. btw. (i) ReHo and spike rates,
 % and (ii) ALFF and spike rates
@@ -343,18 +364,19 @@ spikes_all = spikes.spikes_all;
 % Part (IX): assemble array for storing all variables interested
 reho_alff_array = {};
 
+% round all entries to 3 d. p.
 for row = 1:size(sig_box_all, 1)
-    reho_alff_array{row, 1} = sig_box_all{row, 1};
-    reho_alff_array{row, 2} = sig_box_all{row, 2};
-    reho_alff_array{row, 3} = spikes_all{row, 3};
-    reho_alff_array{row, 4} = sig_box_all{row, 3};
-    reho_alff_array{row, 5} = sig_box_all{row, 4};
+    reho_alff_array{row, 1} = sig_box_all{row, 1};   % id of channel
+    reho_alff_array{row, 2} = sig_box_all{row, 2};   % name of channel
+    reho_alff_array{row, 3} = round(spikes_all{row, 3}, 3);   % spike rate [/min]
+    reho_alff_array{row, 4} = round(sig_box_all{row, 3}, 3);   % reho
+    reho_alff_array{row, 5} = round(sig_box_all{row, 4}, 3);   % mean alff
 end
 
-reho_alff_array{1, 6} = rho_reho_spikes;
-reho_alff_array{1, 7} = pval_reho_sp;
-reho_alff_array{1, 8} = rho_malff_spikes;
-reho_alff_array{1, 9} = pval_malff_sp;
+reho_alff_array{1, 6} = round(rho_reho_spikes, 3);   % corr. coeff. btw. reho and spike rates
+reho_alff_array{1, 7} = round(pval_reho_sp, 3);   % p-val. of corr. coeff. btw. reho and spike rates
+reho_alff_array{1, 8} = round(rho_malff_spikes, 3);    % corr. coeff. btw. malff and spike rates
+reho_alff_array{1, 9} = round(pval_malff_sp, 3);   % p-val. of corr. coeff. btw. malff and spike rates
 
 % END Part (IX): assemble array for storing all variables interested
 %---------------------------------------------------------------------------
