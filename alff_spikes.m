@@ -100,7 +100,8 @@ table_path = fullfile(fname_op, filename_table);   % path of table of clin. det.
 % output table and structure created in current session
 if op_results == 1
     writetable(table_ch_rho_ns_mnalff, table_path);   % table of clin. det. ch.
-    save(fullfile(fname_op, filename_op), 'terms');   % struct.
+%     save(fullfile(fname_op, filename_op), 'terms');   % struct.
+    save(fullfile(fname_op, filename_op), 'terms', '-v7.3');
 end
 %---------------------------------------------------------------------------
 
