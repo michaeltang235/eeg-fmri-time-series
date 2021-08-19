@@ -623,8 +623,8 @@ end
 
 % convert cell array to table and add table headers
 table_ch_rho_ns_mnalff = cell2table(ch_rho_ns_mnalff, ...
-    'VariableNames',{'event type', 'channel name', 'corr. coeff.', ...
-    'p-val.'});
+    'VariableNames',{'event type', 'channel name', ['corr. coeff._', num2str(window_size)], ...
+    ['p-val._', num2str(window_size)]});
 
 % End Part (IX): convert cell array to table
 %---------------------------------------------------------------------------
