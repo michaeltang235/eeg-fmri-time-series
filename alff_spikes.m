@@ -214,7 +214,7 @@ evti = event_onsets.results.evti;
 
 % initialize array for storing number of spikes in each segment, for each
 % type of event. i.e. col. 1 = event type, col. 2 = num. of spikes assoc.
-num_spikes = cell(length(event_def));
+num_spikes = cell(length(event_def), 2);
 % num_spikes = cell(1, numel(evti));
 
 % for each type of event, loop through each segment in time, then get spike
