@@ -129,10 +129,9 @@ fdnames = fieldnames(terms.terms);
 num_spikes_all = {};   % initialize array
 ch_mnalff_all = {};
 for sess_ind = 1:length(fdnames)   % for each session
-    % get num_spikes array for current session
-%     num_spikes_cur = terms.fdnames{sess_ind}.num_spikes;   
-    num_spikes_cur = a.terms.(fdnames{sess_ind}).num_spikes;
-    ch_mnalff_cur = a.terms.(fdnames{sess_ind}).ch_mnalff;
+    % get num_spikes array for current session;   
+    num_spikes_cur = terms.(fdnames{sess_ind}).num_spikes;
+    ch_mnalff_cur = terms.(fdnames{sess_ind}).ch_mnalff;
     % concatenate arrays vertically
     num_spikes_all = [num_spikes_all; num_spikes_cur];
     ch_mnalff_all = [ch_mnalff_all; ch_mnalff_cur];
