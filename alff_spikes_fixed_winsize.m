@@ -122,8 +122,20 @@ toc
 % (A): EXECUTE THE FOLLOWING AFTER CALLING FUNCTION ON EACH RUN
 
 % access fieldnames of struct. terms
-fdnames = fieldnames(terms.terms);
+fds = fieldnames(terms);
 
+% get non-empty fieldnames
+fd_ind = [];   % initialize array for storing indices of non-empty fields
+for sess_ind = 1:length(fds)   % for each field
+    if ~isempty(terms.(fds{sess_ind}))   % check if field is empty
+        fd_ind = [fd_ind sess_ind];   % if not, append index to array
+    end
+end
+fdnames = fds(fd_ind);   % access all non-empty fields using indices acquired
+
+% execute the lines below if there exists at least one non-empty field
+if length(fdnames) >= 1
+    
 % transform array to single layer, concatenating num_spikes and
 % ch_mnalff arrays from diff. runs together
 num_spikes_all = {};   % initialize array
@@ -141,7 +153,24 @@ end
 % (A1): combine number of spikes from different runs together
 
 % get unique event types for all sessions
-unique_ev_type = unique([num_spikes_all{:, 1}]);
+unique_ev_type = {};   % initialize array
+
+for item = 1:size(num_spikes_all, 1)   % for each item available
+    count = 0;   % initialize count as 0 for current item
+    for j = 1:size(unique_ev_type, 1)   % for each unique entry identified
+        % if any entry in num_spikes_all exists in uni. array, increment 
+        % count by 1
+        if isequal(num_spikes_all(item), unique_ev_type(j))
+            count = count + 1;
+        end
+    end
+    % if count remains zero at the end of the scan, it means no entry in
+    % uni. array agrees with any item in num_spikes_all, add current
+    % item to uni. array
+    if count == 0
+        unique_ev_type = [unique_ev_type; num_spikes_all(item, 1)];
+    end
+end
 
 % with all runs considered, combine numbers of spikes belonging to the same
 % event type together
@@ -151,8 +180,13 @@ for ev_ind = 1:length(unique_ev_type)   % for every unique event type
     
     % search all rows in 1st col. with event type equal to current unique
     % event type, obtain matching indices
-    ind_req = find([num_spikes_all{:, 1}] == unique_ev_type(ev_ind));
-    
+    ind_req = [];
+    for item = 1:size(num_spikes_all, 1)
+        if isequal(num_spikes_all(item, 1), unique_ev_type(ev_ind))
+            ind_req = [ind_req item];
+        end
+    end
+
     % use indices obtained to get corresponding cells, with col. 1 denoting
     % event type, and col. 2 denoting num. of spikes
     cell_obt = num_spikes_all(ind_req, :);
@@ -318,6 +352,7 @@ if op_results == 1
     save(fullfile(fname_op, filename_op), 'terms', '-v7.3');
 end
 
+end   % end if length(fdnames) >= 1
 
 %---------------------------------------------------------------------------
 % FUNCTION FOR GETTING MEAN ALFF AND NUMBER OF SPIKES IN EACH SEGEMENT IN
