@@ -172,76 +172,100 @@ for item = 1:size(num_spikes_all, 1)   % for each item available
     end
 end
 
-% with all runs considered, combine numbers of spikes belonging to the same
-% event type together
-num_spikes_runs_comb = {};   % initialize array
-rnum = 1;   % initialize row number
-for ev_ind = 1:length(unique_ev_type)   % for every unique event type
-    
-    % search all rows in 1st col. with event type equal to current unique
-    % event type, obtain matching indices
-    ind_req = [];
-    for item = 1:size(num_spikes_all, 1)
-        if isequal(num_spikes_all(item, 1), unique_ev_type(ev_ind))
-            ind_req = [ind_req item];
+
+%--------------
+% code added:
+% find all sessions at which each event type appears
+ev_sess_ind = unique_ev_type;
+for item = 1:numel(unique_ev_type)   % for each unique event type
+    cur_uni_ev_type = unique_ev_type{item};
+    ind_found = [];
+    count = 0;
+    for sess_ind = 1:length(fdnames)   % for each session
+        cur_num_spikes = terms.(fdnames{sess_ind}).num_spikes;
+%         count = 0;
+        for i = 1:size(cur_num_spikes, 1)
+            if isequal(cur_num_spikes{i, 1}, cur_uni_ev_type)
+                count = count + 1;
+            end
+        end
+        if count > 0
+            ind_found = [ind_found sess_ind];
         end
     end
+    ev_sess_ind{item, 2} = ind_found;
+end
 
-    % use indices obtained to get corresponding cells, with col. 1 denoting
-    % event type, and col. 2 denoting num. of spikes
-    cell_obt = num_spikes_all(ind_req, :);
-    
-    % get event type by 1st row in 1st col. in cell
-    num_spikes_runs_comb{rnum, 1} = cell_obt{1, 1};   % get event type
-    num_spikes_runs_comb{rnum, 2} = [cell_obt{:, 2}];   % get num. of spikes in all rows in cell
-    rnum = rnum + 1;   % increment row number by 1 for next unique event type
+% end code added
+%--------------
+
+% combine number of spikes of each unique event type in all sessions together
+num_spikes_comb = unique_ev_type;
+for item = 1:size(ev_sess_ind, 1)
+    cur_ev_type = ev_sess_ind{item, 1};
+    spikes_found = {};
+    for sess_ind = 1:length(fdnames)   % for each session
+        num_spikes_cur_sess = terms.(fdnames{sess_ind}).num_spikes;
+        for i = 1:size(num_spikes_cur_sess, 1)
+            if isequal(num_spikes_cur_sess{i, 1}, cur_ev_type)
+                spikes_found = [spikes_found num_spikes_cur_sess{i, 2}];
+            end
+        end
+    end
+    num_spikes_comb{item, 2} = spikes_found;
 end
 
 % end (A1): combine number of spikes from different runs together
 %--------------------------
 
-% (A2): combine mean normalized alff from different runs together
+% % (A2): combine mean normalized alff from different runs together
 
-% get unique channel names from single-layer ch_mnalff_all array
-unique_ch = unique(ch_mnalff_all(:, 2));
-
-% combine mnalff of rows with same event type and channel names
 ch_mnalff_comb = {};   % initialize array
-rnum = 1;   % initialize row number
+rnum = 1;   % initialize row number 
 
-for ch_ind = 1:length(unique_ch)   % for each unique channel name
+for item = 1:size(ev_sess_ind, 1)   % for each unique event type
+    cur_ev_type = ev_sess_ind{item, 1};   % get current unique event type
+    sess_ind_req = ev_sess_ind{item, 2};   % get session indices assoc.
     
-    % find rows with channel names agree with current unique channel name
-    ind_req = find(strcmp(ch_mnalff_all(:, 2), unique_ch{ch_ind}));   % get indices required
-    cell_obt = ch_mnalff_all(ind_req, :);   % get cells using indices 
-    
-    % from cells obtained above, get unique event type(s) associated
-    unique_ev_type_ch = unique([cell_obt{:, 1}]);
-    
-    % if only one unique event type is found (all channel names have the
-    % same event type),
-    % assign all entries in cell to ch_mnalff_comb array
-    if numel(unique_ev_type_ch) == 1
-        ch_mnalff_comb(rnum, 1:2) = cell_obt(1, 1:2);   % assign event type and channel name
-        ch_mnalff_comb{rnum, 3} = [cell_obt{:, 3}];   % concatenate all entries of mean normalized alff
-        rnum = rnum + 1;
-    % otherwise, find rows in cell_obt corresponding to each unique event
-    % type found, extract those rows to cell_found array, and assign
-    % relevant info. to ch_mnalff_comb
-    else  
-        for item = 1:numel(unique_ev_type_ch)   % for every unqiue event type in cell_obt
-            % rows with event type agreeing current unique event type
-            ind_found = find([cell_obt{:, 1}] == unique_ev_type_ch(item));   
-            cell_found = cell_obt(ind_found, :);   % get cells
-            ch_mnalff_comb(rnum, 1:2) = cell_found(1, 1:2);   % assign event type and channel name
-            ch_mnalff_comb{rnum, 3} = [cell_found{:, 3}];   % concatenate all entries of mean norm. alff
-            rnum = rnum + 1;   % increment row number by 1 for next unique event type
+    % store channel names and their mean norm. alff for current event type
+    ch_mnalff_req = {};   % initialize array
+    % obtain mnalff for all channels assoc. from the required sessions 
+    for sess_ind = sess_ind_req(1):sess_ind_req(end)   % every sess. req.
+        % get mnalff for all channels in current session
+        ch_mnalff_cur_sess = terms.(fdnames{sess_ind}).ch_mnalff; 
+        % then, only select those channels with event type matching the
+        % current event type
+        for i = 1:size(ch_mnalff_cur_sess, 1)
+            if ismember(ch_mnalff_cur_sess{i, 1}, cur_ev_type)
+                ch_mnalff_req = [ch_mnalff_req; ch_mnalff_cur_sess(i, :)];
+            end
         end
     end
-end   % end for ch_ind = 1:length(unique_ch)   % for each unique channel name
+    
+    % from the list of channels (and their mnalff) obtained, get unique
+    % channel names
+    if ~isempty(ch_mnalff_req)   % if channel name is matched for cur. ev. type
+    unique_ch = unique(ch_mnalff_req(:, 2));
+    
+    
+    % for each unique channel name, combine their mnalff from all sessions
+    % required
+    for ch = 1:numel(unique_ch)
+        % get row indices for current unique channel name
+        ind_req = find(strcmp(ch_mnalff_req(:, 2), unique_ch{ch}));
+        cell_obt = ch_mnalff_req(ind_req, :);   % obtain cells 
+        ch_mnalff_comb(rnum, 1:2) = cell_obt(1, 1:2);   % assign event type and ch. name
+        ch_mnalff_comb{rnum, 3} = [cell_obt{:, 3}];   % combine mnalff from all sess. 
+        rnum = rnum + 1;   % increment row number by 1 for next channel
+    end
+    
+    end
+ 
+end
 
-% end (A2): combine mean normalized alff from different runs together
-%--------------------------
+
+% % end (A2): combine mean normalized alff from different runs together
+% %--------------------------
 
 % (A3): get spearman's corr. coeff. btw. num. of spikes and mean normalized
 % alff from all runs combined,
@@ -252,23 +276,22 @@ end   % end for ch_ind = 1:length(unique_ch)   % for each unique channel name
 % 3rd col. = spearman corr. coeff.
 % 4th col. = p-value
 
-ch_rho_sp_comb = cell(size(ch_mnalff_comb, 1), 4);   % initialize array
-rnum = 1;   % initialize row number
-for row = 1:size(num_spikes_runs_comb, 1)   % for every row in num. spikes combined array
-    curr_ev = num_spikes_runs_comb{row, 1};   % get current event type
-    for ch_row = 1:size(ch_mnalff_comb, 1)   % for every channel in mnalff combined array
-        % if event types agree in both arrays
-        if ismember(ch_mnalff_comb{ch_row, 1}, curr_ev)
-            % get spearman corr. coeff. and p-value 
-            [rho_sp_comb, pval_sp_comb] = corr(cell2mat(num_spikes_runs_comb{row, 2})', ...
-                cell2mat(ch_mnalff_comb{ch_row, 3})', 'Type', 'Spearman');
-            % assign event type and channel name
-            ch_rho_sp_comb(rnum, 1:2) = ch_mnalff_all(ch_row, 1:2);   
-            ch_rho_sp_comb{rnum, 3} = round(rho_sp_comb, 3);   % assign spearman rho
-            ch_rho_sp_comb{rnum, 4} = round(pval_sp_comb, 3);   % assign p-value
-            rnum = rnum + 1;   % increment row number by 1 for next event channel
+ch_rho_sp_comb = ch_mnalff_comb(:, 1:2);
+
+for i = 1:size(ch_mnalff_comb, 1)
+    ch_ev = ch_mnalff_comb{i, 1};
+    ch_name = ch_mnalff_comb{i, 2};
+    for j = 1:size(num_spikes_comb, 1)
+        if ismember(ch_ev, num_spikes_comb{j, 1})
+            num_spikes_found = cell2mat(num_spikes_comb{j, 2})';
         end
     end
+    ch_mnalff_found = cell2mat(ch_mnalff_comb{i, 3})';
+    [rho_sp_comb, pval_sp_comb] = corr(num_spikes_found, ch_mnalff_found, ...
+        'Type', 'Spearman');
+    ch_rho_sp_comb{i, 3} = round(rho_sp_comb, 3);
+    ch_rho_sp_comb{i, 4} = round(pval_sp_comb, 3);
+    
 end
 
 % read table arrays (of all runs) from struct., combine them 
@@ -278,43 +301,41 @@ end
 % 3rd col. = spearman rho
 % 4th col. = p-value, all table arrays stored in struct have event types
 % and channel names arranged in same order
-rho_pval_comb = {};   % initialize array 
+rho_pval_comb_all = ch_rho_sp_comb(:, 1:2);   % initialize array 
+
 for sess_ind = 1:length(fdnames)   % for each run
-    if sess_ind == 1   % if it's the 1st run, get all col. from array
-        rho_pval_comb = terms.(fdnames{sess_ind}).ch_rho_ns_mnalff;
-    else   % else only get 3rd and 4th col. (spearman rho and p-value), 
-           % and assign them to appropriate col. of rho_pval_comb array
-        rho_pval_comb(:, 3+(sess_ind-1)*2:4+(sess_ind-1)*2) = terms.(fdnames{sess_ind}).ch_rho_ns_mnalff(:, 3:4);
+    ar_read = terms.(fdnames{sess_ind}).ch_rho_ns_mnalff;
+    for i = 1:size(rho_pval_comb_all, 1)
+        for j = 1:size(ar_read, 1)
+            if isequal(ar_read{j, 1}, rho_pval_comb_all{i, 1}) && strcmp(ar_read{j, 2}, rho_pval_comb_all{i, 2})
+                rho_pval_comb_all{i, 3+(sess_ind-1)*2} = ar_read{j, 3};
+                rho_pval_comb_all{i, 4+(sess_ind-1)*2} = ar_read{j, 4};
+            end
+        end
     end
+%     rho_pval_comb_all(:, 3+(sess_ind-1)*2:4+(sess_ind-1)*2) = terms.(fdnames{sess_ind}).ch_rho_ns_mnalff(:, 3:4);
 end
+
+
+% for sess_ind = 1:length(fdnames)   % for each run
+%     rho_pval_comb_all(:, 3+(sess_ind-1)*2:4+(sess_ind-1)*2) = terms.(fdnames{sess_ind}).ch_rho_ns_mnalff(:, 3:4);
+% end
 
 % next, for array (ch_rho_sp_comb) storing spearman rho and p-values
 % obtained from all num. spikes and mean norm. alff combined from all runs, 
-ncol = size(rho_pval_comb, 2);   % get num. of col. established
+ncol = size(rho_pval_comb_all, 2);   % get num. of col. established
 
-for row = 1:size(rho_pval_comb, 1)   % for every row in rho_pval_comb array
-    ev_type_cur = rho_pval_comb{row, 1};   % get current event type
-    ch_name_cur = rho_pval_comb{row, 2};   % get current channel name
-    % look for matching row in ch_rho_sp_comb
-    for i = 1:size(ch_rho_sp_comb, 1)   % for every row in ch_rho_sp_comb
-        % if event type and channel name agree with current pattern
-        if ch_rho_sp_comb{i, 1} == ev_type_cur && strcmp(ch_rho_sp_comb{i, 2}, ch_name_cur)
-            % assign spearman rho and p-value to 7th and 8th col. of
-            % rho_pval_comb array
-            rho_pval_comb(row, ncol+1:ncol+2) = ch_rho_sp_comb(i, 3:4);
-        end
-    end
-end
+rho_pval_comb_all(:, ncol+1:ncol+2) = ch_rho_sp_comb(:, 3:4);
 
 % get total number of columns established
-ncol_all = size(rho_pval_comb, 2);
+ncol_all = size(rho_pval_comb_all, 2);
 
 % initialize array to store headers required for table
 headers_req = {};
 runind = 1;   % initialize run index
 
 % first two col. are event type and channel name
-for j = 1:ncol_all-2   % for every remaining col. 
+for j = 1:ncol-2   % for every remaining col. 
     if mod(j, 2) == 1   % if col. num. is odd
         headers_req{j} = ['corr. coeff._', num2str(window_size), ...
             '_run_ind_', num2str(runind)];   % construct details of corr. coeff.
@@ -327,9 +348,13 @@ for j = 1:ncol_all-2   % for every remaining col.
         runind = runind + 1;
     end
 end
-
+headers_req{ncol-2+1} = ['corr. coeff._', num2str(window_size), ...
+            '_run_ind_', 'all'];   % construct details of corr. coeff.
+headers_req{ncol-2+2} = ['pval_', num2str(window_size), ...
+            '_run_ind_', 'all'];
+        
 % convert cell array to table and add table headers
-table_rho_pval_comb = cell2table(rho_pval_comb, ...
+table_rho_pval_comb = cell2table(rho_pval_comb_all, ...
     'VariableNames',{'event type', 'channel name', headers_req{:}});
 
 % format filename for table
@@ -344,7 +369,7 @@ end
 
 % store rho_pval_comb array under every fieldname in struct.
 for sess_ind = 1:length(fdnames)
-    terms.(fdnames{sess_ind}).rho_pval_comb = rho_pval_comb;
+    terms.(fdnames{sess_ind}).rho_pval_comb_all = rho_pval_comb_all;
 end
 
 % update terms struct. to path
@@ -771,7 +796,7 @@ end
 ch_mnalff = ch_name_matched(:, 1:2);
 
 for i = 1:size(ch_name_matched, 1)   % for each channel
-    mxyz = ch_name_matched{i, 4};
+    mxyz = ch_name_matched{i, 4};   % get mid-point in image space
     
     % create regional mask from explicit mask using the coordinates of 
     % the 3X3X3 box
@@ -884,6 +909,7 @@ opstruct.num_spikes = num_spikes;   % number of spikes in each seg., for each ev
 % opstruct.norm_alff = norm_alff;   % normalized alff at each voxel
 
 opstruct.ch_mnalff = ch_mnalff;   % matched channel names with mean normalized alff in 3X3X3 box of each channel
+
 % opstruct.ch_rho_sp = ch_rho_sp;   % spearman rho btw. num. of spikes and mean normalized alff for each channel
 % opstruct.ch_pval_sp = ch_pval_sp;   % p-value of spearman rho
 % 
