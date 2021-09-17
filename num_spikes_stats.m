@@ -335,10 +335,10 @@ end
 
 %---------------------------------------------------------------------------
 % execute the lines below only if com_alff == 1 (long enough time series)
-if com_alff ~= 1
-    disp('time series is not long enough for pwelch method')
-else
-      
+% if com_alff ~= 1
+%     disp('time series is not long enough for pwelch method')
+% else
+%       
 % Part (I): get spike rate in each segment 
 
 tr = swra_info.PixelDimensions(4);   % repetition time, in seconds
@@ -430,6 +430,6 @@ opstruct.table_spikes_stats = table_spikes_stats;   % table of stats of num. of 
 
 
 
-end   % end if com_alff ~= 1
+% end   % end if com_alff ~= 1
 
 end   % end function opstruct = get_spikes_stats(input_array)
