@@ -11,7 +11,7 @@ tic
 % BEGIN USER INPUT
 
 % enter subject number (str)
-subnum = '18';
+subnum = '14';
 
 % enter path to directory where all input files are located
 directname = ['/work/levan_lab/mtang/fmri_project/', 'sub', subnum];
@@ -259,11 +259,14 @@ for i = 1:size(dfc_array_all, 1)   % for every row in dfc_array_all
         % use intersect to find commonrow indices in both ref and targ arrays
         ind_matched = intersect(ind_ref, ind_targ);
         
+	% obtain portion of array with indices matched
+	dfc_minor = dfc_array_all(ind_matched, :);
+
         % ind_matched comes in the form [a b], where a and b are common row
         % indices, use the first entry in ind_matched (i.e. a) to get all
         % necessary info (event type, ids, name, etc ...)
         dfc_comb(rnum, 1:5) = dfc_array_all(ind_matched(1), 1:5);   % assign nescessary info.
-        dfc_comb{rnum, 6} = [dfc_array_all{ind_matched(1), 6} dfc_array_all{ind_matched(2), 6}];   % combine dfc from multiple runs together
+        dfc_comb{rnum, 6} = horzcat(dfc_minor{:, end});   % hor. concatenate dfc from all runs
         rnum = rnum + 1;    % increment row number by 1 for next channel pair
     end
     
@@ -931,7 +934,14 @@ for item = 1:size(dfc_array, 1)   % scan through each row of dfc_array
     
     % get spearman's corr. coeff. and its p-value btw. current dfc and
     % spike rates (target channel)
+    rho_sp = corr(dfc, fmri_spikes, 'Type', 'Spearman');
+    if length(dfc) >= 10
     [rho_sp, pval_sp] = corr(dfc, fmri_spikes, 'Type', 'Spearman');
+    elseif isequal(rho_sp, -1)
+    pval_sp = NaN;
+    else
+    [rho_sp, pval_sp] = corr(dfc, fmri_spikes, 'Type', 'Spearman');
+    end
     
     % assign info. to ch_rho_sp array
     ch_rho_sp{item, 1} =  ev_type_req;   % event type
