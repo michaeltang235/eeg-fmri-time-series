@@ -11,7 +11,7 @@ tic
 % BEGIN USER INPUT
 
 % enter subject number (str)
-subnum = '14';
+subnum = '18';
 
 % enter path to directory where all input files are located
 directname = ['/work/levan_lab/mtang/fmri_project/', 'sub', subnum];
@@ -917,7 +917,12 @@ for item = 1:size(dfc_array, 1)   % scan through each row of dfc_array
     
     % get corresponding row index of spikes measured during fmri in
     % num_spikes array
-    ind_req_spikes = find([num_spikes{:, 1}] == ev_type_req);   
+    for i = 1:size(num_spikes, 1)
+    	if ismember(ev_type_req, num_spikes{i, 1})
+    		ind_req_spikes = i;
+	end
+    end
+    %ind_req_spikes = find([num_spikes{:, 1}] == ev_type_req);   
     
     % get number of spikes (target channel) measured during fmri and dfc 
     % btw. current channel pair
