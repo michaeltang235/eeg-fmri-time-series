@@ -429,10 +429,27 @@ motion_file_path = input_array.motion_file_path;   % path of motion parameter fi
 subnum = input_array.subnum;   % subject number of interest
 window_size = input_array.window_size;   % current window size in (s)
 
+% initialize output struct. as empty array
+opstruct = [];
+
+% check if length of time series is long enough, 256 is used as it's chosen
+% as the width of window in welch's method of power spectral density (psd) 
+% estimate. If so, change value of com_alff to 1 so that the script will
+% calculate dfc, the relevant corr. coeff., and p-values.
+com_dfc = 0;
+if size(swra_img, 4) >= 256
+    com_dfc = 1;
+end
+
 % % end Prelim: access variables defined in input array
 % %---------------------------------------------------------------------------
 
 % Part (I): get spike rate in each segment 
+
+% execute the lines below only if com_dfc == 1 (long enough time series)
+if com_dfc ~= 1
+    disp('time series is not long enough for pwelch method')
+else
 
 % get basic info. about the processed image
 tr = swra_info.PixelDimensions(4);   % repetition time, in seconds
@@ -948,6 +965,8 @@ opstruct.table_ch_rho_sp_dfc_spikes = table_ch_rho_sp_dfc_spikes;   % table list
 
 % END Part (VIII): store quantities calcu. in output struct.
 %---------------------------------------------------------------------------
+
+end   % end if com_alff == 1
 
 end   % end function opstruct = get_dfc_num_spikes_fixed_winsize(input_array)
 
