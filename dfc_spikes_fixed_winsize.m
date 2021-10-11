@@ -1,6 +1,10 @@
 clear all 
 close all
 
+% This script calculates (i) dynamic functional connectivity (dfc) between 
+% every pair of channel and (ii) spike rate of every channel, then computes
+% Spearman's correlation coefficient between (i) and (ii).
+
 tic 
 %---------------------------------------------------------------------------
 %---------------------------------------------------------------------------
@@ -125,6 +129,220 @@ toc
 
 %---------------------------------------------------------------------------
 % (A): EXECUTE THE FOLLOWING AFTER CALLING FUNCTION ON EACH RUN
+
+% access fieldnames of struct. terms
+fds = fieldnames(terms);
+
+% get non-empty fieldnames
+fd_ind = [];   % initialize array for storing indices of non-empty fields
+for sess_ind = 1:length(fds)   % for each field
+    if ~isempty(terms.(fds{sess_ind}))   % check if field is empty
+        fd_ind = [fd_ind sess_ind];   % if not, append index to array
+    end
+end
+fdnames = fds(fd_ind);   % access all non-empty fields using indices acquired
+
+% execute the lines below if there exists at least one non-empty field
+if length(fdnames) >= 1
+    
+% transform array to single layer, concatenating num_spikes and
+% dfc arrays from diff. runs together
+num_spikes_all = {};   % initialize array
+dfc_array_all = {};
+for sess_ind = 1:length(fdnames)   % for each session
+    % get num_spikes array for current session;   
+    num_spikes_cur = terms.(fdnames{sess_ind}).num_spikes;
+    dfc_array_cur = terms.(fdnames{sess_ind}).dfc_array;
+    % concatenate arrays vertically
+    num_spikes_all = [num_spikes_all; num_spikes_cur];
+    dfc_array_all = [dfc_array_all; dfc_array_cur];
+end
+
+%--------------------------
+% (A1): combine number of spikes from different runs together
+
+% get unique event types for all sessions
+unique_ev_type = {};   % initialize array
+
+for item = 1:size(num_spikes_all, 1)   % for each item available
+    count = 0;   % initialize count as 0 for current item
+    for j = 1:size(unique_ev_type, 1)   % for each unique entry identified
+        % if any entry in num_spikes_all exists in uni. array, increment 
+        % count by 1
+        if isequal(num_spikes_all(item), unique_ev_type(j))
+            count = count + 1;
+        end
+    end
+    % if count remains zero at the end of the scan, it means no entry in
+    % uni. array agrees with any item in num_spikes_all, add current
+    % item to uni. array
+    if count == 0
+        unique_ev_type = [unique_ev_type; num_spikes_all(item, 1)];
+    end
+end
+
+%--------------
+% code added:
+% find all sessions at which each event type appears
+ev_sess_ind = unique_ev_type;
+for item = 1:numel(unique_ev_type)   % for each unique event type
+    cur_uni_ev_type = unique_ev_type{item};
+    ind_found = [];
+    count = 0;
+    for sess_ind = 1:length(fdnames)   % for each session
+        cur_num_spikes = terms.(fdnames{sess_ind}).num_spikes;
+%         count = 0;
+        for i = 1:size(cur_num_spikes, 1)
+            if isequal(cur_num_spikes{i, 1}, cur_uni_ev_type)
+                count = count + 1;
+            end
+        end
+        if count > 0
+            ind_found = [ind_found sess_ind];
+        end
+    end
+    ev_sess_ind{item, 2} = ind_found;
+end
+
+% end code added
+%--------------
+% combine number of spikes of each unique event type in all sessions together
+num_spikes_comb = unique_ev_type;
+for item = 1:size(ev_sess_ind, 1)
+    cur_ev_type = ev_sess_ind{item, 1};
+    spikes_found = {};
+    for sess_ind = 1:length(fdnames)   % for each session
+        num_spikes_cur_sess = terms.(fdnames{sess_ind}).num_spikes;
+        for i = 1:size(num_spikes_cur_sess, 1)
+            if isequal(num_spikes_cur_sess{i, 1}, cur_ev_type)
+                spikes_found = [spikes_found num_spikes_cur_sess{i, 2}];
+            end
+        end
+    end
+    num_spikes_comb{item, 2} = spikes_found;
+end
+
+% end (A1): combine number of spikes from different runs together
+%--------------------------
+
+% % % (A2): combine dfc from different runs together
+
+% initialize arrays
+dfc_comb = {};   % storing dfc combined from different runs
+id_pair_found = [];   % storing channel id pairs found
+rnum = 1;   % row number for dfc_comb array
+count = 0;   % how many times ids are found
+for i = 1:size(dfc_array_all, 1)   % for every row in dfc_array_all
+    % obtain ids of ref. and targ. channels
+    ref_id = dfc_array_all{i, 2};   % ref. channel id
+    targ_id = dfc_array_all{i, 3};   % targ. channel id
+    
+    % after obtaining the id pair, scan across each row in id_pair_found
+    % array to look for matching entries (permutation). If found, increment count by 1
+    for j = 1:size(id_pair_found, 1)
+        if isequal([ref_id, targ_id], id_pair_found(j, :))
+            count = count + 1;
+        end
+    end
+    
+    % if after no matched id pair is found in id_pair_found array, it means
+    % that the id pair hasn't been matched yet. Update the array with the
+    % id pair, then concatenate dfc of all rows with matching id pairs
+    % together
+    if count == 0
+        % update id_pair_found array
+        id_pair_found = [id_pair_found; [ref_id, targ_id]];
+        
+        ind_ref = find([dfc_array_all{:, 2}] == ref_id);   % row index where id equals to ref. id
+        ind_targ = find([dfc_array_all{:, 3}] == targ_id);   % row index where id equals to targ. id
+    
+        % use intersect to find commonrow indices in both ref and targ arrays
+        ind_matched = intersect(ind_ref, ind_targ);
+        
+        % ind_matched comes in the form [a b], where a and b are common row
+        % indices, use the first entry in ind_matched (i.e. a) to get all
+        % necessary info (event type, ids, name, etc ...)
+        dfc_comb(rnum, 1:5) = dfc_array_all(ind_matched(1), 1:5);   % assign nescessary info.
+        dfc_comb{rnum, 6} = [dfc_array_all{ind_matched(1), 6} dfc_array_all{ind_matched(2), 6}];   % combine dfc from multiple runs together
+        rnum = rnum + 1;    % increment row number by 1 for next channel pair
+    end
+    
+    % reset count as 0 for next row in dfc_array_all inspected
+    count = 0;
+
+end
+
+% % end (A2): combine dfc from different runs together
+% %--------------------------
+
+% (A3): get spearman's corr. coeff. btw. num. of spikes and mean normalized
+% alff from all runs combined,
+
+% initialize array with format given below, 
+% 1st col. = event type
+% 2nd col.= ref. channel name
+% 3rd col.= target channel name
+% 4th col. = spearman corr. coeff.
+% 5th col. = p-value
+
+ch_rho_sp_comb = dfc_comb(:, 1);   % assign event type
+ch_rho_sp_comb = [ch_rho_sp_comb dfc_comb(:, 4:5)];   % assign channel names
+
+% obtain event type for every row, then obtain corresponding row index in 
+% num_spikes_comb array, get the combined spike rates from all runs
+for i = 1:size(dfc_comb, 1)   % every row (channel pair)
+    ch_ev = dfc_comb{i, 1};   % obtain current event type
+    for j = 1:size(num_spikes_comb, 1)   % every row in num_spikes_comb
+        % if current event type matches with event type in num_spikes_comb
+        % obtain the number of spikes combined from all runs
+        if ismember(ch_ev, num_spikes_comb{j, 1})
+            num_spikes_found = cell2mat(num_spikes_comb{j, end})';
+        end
+    end
+    
+    % get list of dfc for current channel pair
+    dfc_found = cell2mat(dfc_comb{i, end})';
+    
+    % calculate spearman corr. coeff. and its p-value
+    [rho_sp_comb, pval_sp_comb] = corr(num_spikes_found, dfc_found, ...
+        'Type', 'Spearman');
+    
+    % assign spearman's corr. coeff. and p-pvalue to the rightmost col.
+    ch_rho_sp_comb{i, 4} = round(rho_sp_comb, 3);   % corr. to 3 d. p.
+    ch_rho_sp_comb{i, 5} = round(pval_sp_comb, 3);
+    
+end
+
+% read table arrays (of all runs) from struct., combine them 
+% format of table array is given below,
+% 1st col. = event type
+% 2nd col. = ref. channel name
+% 3rd col. = targ. channel name
+% 4th col. = spearman rho
+% 5th col. = p-value, all table arrays stored in struct have event types
+% and channel names arranged in same order
+rho_pval_comb_all = ch_rho_sp_comb(:, 1:3);   % initialize array 
+
+for sess_ind = 1:length(fdnames)   % for each run
+    ar_read = terms.(fdnames{sess_ind}).ch_rho_sp;
+    for i = 1:size(rho_pval_comb_all, 1)
+        for j = 1:size(ar_read, 1)
+            if isequal(ar_read{j, 1}, rho_pval_comb_all{i, 1}) && ...
+                    strcmp(ar_read{j, 2}, rho_pval_comb_all{i, 2}) && ...
+                        strcmp(ar_read{j, 3}, rho_pval_comb_all{i, 3})
+                    rho_pval_comb_all{i, 4+(sess_ind-1)*2} = ar_read{j, end-1};
+                    rho_pval_comb_all{i, 5+(sess_ind-1)*2} = ar_read{j, end};
+            end
+        end
+    end
+end
+
+
+
+
+
+
+end   % end if length(fdnames) >= 1
 
 %---------------------------------------------------------------------------
 % FUNCTION FOR GETTING DYNAM. FUNC. CONNECTIVITY AND NUMBER OF SPIKES 
@@ -511,11 +729,12 @@ end   % for item = 1:size(ch_name_matched, 1)
 
 % with ids assigned to pairs of electrode contacts, get correlation
 % coefficients between each pair, store data in corr_array, with
-% col. 1 = id of reference electrode pair, 
-% col. 2 = id of target electrode pair, 
-% col. 3 = name of reference electrode pair
-% col. 4 = name of tagret electrode pair
-% col. 5 = pearson's correlation coefficient between ref. and target pairs
+% col. 1 = event type associated
+% col. 2 = id of reference electrode pair, 
+% col. 3 = id of target electrode pair, 
+% col. 4 = name of reference electrode pair
+% col. 5 = name of tagret electrode pair
+% col. 6 = pearson's correlation coefficient between ref. and target pairs
 
 % initialize corr_array 
 % corr_array = cell(size(sig_box, 1)^2, 5);
@@ -527,25 +746,25 @@ for i = 1:size(sig_box, 1)   % each row in sig_box
         % only compute corr. coeff. if ref. and targ. are not the same
         % channel
         if ~isequal(sig_box{i, 2}, sig_box{j, 2})
-        dfc_array{row, 1} = sig_box{i, 2};   % id of ref. ele. pair
-        dfc_array{row, 2} = sig_box{j, 2};   % id of target ele. pair
-        dfc_array{row, 3} = sig_box{i, 3};   % name of ref. ele. pair
-        dfc_array{row, 4} = sig_box{j, 3};   % name of target ele. pair
+            dfc_array{row, 1} = sig_box{j, 1};   % event type assoc. of target channel  
+            dfc_array{row, 2} = sig_box{i, 2};   % id of ref. ele. pair
+            dfc_array{row, 3} = sig_box{j, 2};   % id of target ele. pair
+            dfc_array{row, 4} = sig_box{i, 3};   % name of ref. ele. pair
+            dfc_array{row, 5} = sig_box{j, 3};   % name of target ele. pair
         
-        % initialize cell for storing corr. coeff. at all segments current
-        % ref. and target channel pair
-        dfc_array{row, 5} = cell(1, length(sig_box{i, end}));
-        for seg_ind = 1:length(sig_box{i, end})   % for each segment
-            ref_sig = [sig_box{i, end}{seg_ind}]';   % ref. signal segment
-            tar_sig = [sig_box{j, end}{seg_ind}]';   % target signal segment
+            % initialize cell for storing corr. coeff. at all segments current
+            % ref. and target channel pair
+            dfc_array{row, 6} = cell(1, length(sig_box{i, end}));
+            for seg_ind = 1:length(sig_box{i, end})   % for each segment
+                ref_sig = [sig_box{i, end}{seg_ind}]';   % ref. signal segment
+                tar_sig = [sig_box{j, end}{seg_ind}]';   % target signal segment
             
-            % corr. coef. btw. ref. and targ. sig.
-            dfc_array{row, 5}{seg_ind} = corr(ref_sig, tar_sig, 'Type', 'Pearson');  
-        end
+                % corr. coef. btw. ref. and targ. sig.
+                dfc_array{row, 6}{seg_ind} = corr(ref_sig, tar_sig, 'Type', 'Pearson');  
+            end
         
-        row = row + 1;   % increment row number by 1 
-        end
-  
+            row = row + 1;   % increment row number by 1 
+        end 
     end
 end
 
@@ -620,29 +839,29 @@ end
  % all numeric values are corrected to 3 decimal place
 ch_rho_sp = {};   % initialize array
 for item = 1:size(dfc_array, 1)   % scan through each row of dfc_array
-    id_targ = dfc_array{item, 2};   % get id of target channel, 2nd col. of dfc_array
+    id_targ = dfc_array{item, 3};   % get id of target channel, 3rd col. of dfc_array
     
     % find row index of sig_box with matching channel id
     ind_req = find([sig_box{:, 2}] == id_targ);   
-    ev_type_req = sig_box{ind_req, 1};   % get corresponding event type 
+    ev_type_req = sig_box{ind_req, 1};   % get corresponding event type, 1st col. 
     
     % get corresponding row index of spikes measured during fmri in
     % num_spikes array
     ind_req_spikes = find([num_spikes{:, 1}] == ev_type_req);   
     
-    % get number of spikes measured during fmri and dfc btw. current
-    % channel pair
-    fmri_spikes = cell2mat(num_spikes{ind_req_spikes, end})';   % spike rate during fmri
+    % get number of spikes (target channel) measured during fmri and dfc 
+    % btw. current channel pair
+    fmri_spikes = cell2mat(num_spikes{ind_req_spikes, end})';   % spike rate during fmri of target channel
     dfc = cell2mat(dfc_array{item, end})';   % dfc btw. current channel pair
     
     % get spearman's corr. coeff. and its p-value btw. current dfc and
-    % spike rates
+    % spike rates (target channel)
     [rho_sp, pval_sp] = corr(dfc, fmri_spikes, 'Type', 'Spearman');
     
     % assign info. to ch_rho_sp array
     ch_rho_sp{item, 1} =  ev_type_req;   % event type
-    ch_rho_sp{item, 2} =  dfc_array{item, 3};   % ref. channel name
-    ch_rho_sp{item, 3} =  dfc_array{item, 4};   % target channel name
+    ch_rho_sp{item, 2} =  dfc_array{item, 4};   % ref. channel name
+    ch_rho_sp{item, 3} =  dfc_array{item, 5};   % target channel name
     ch_rho_sp{item, 4} =  round(rho_sp, 3);   % spearman's rho, corr. to 3 d.p.
     ch_rho_sp{item, 5} =  round(pval_sp, 3);   % p-value, corr. to 3 d.p.
 end
@@ -668,6 +887,7 @@ opstruct.ti_list = ti_list;   % list of initial times  for all segments construc
 opstruct.tf_list = tf_list;   % list of final times  for all segments constructed
 opstruct.num_spikes = num_spikes;   % number of spikes in each seg., for each event type
 
+opstruct.sig_box = sig_box;   % signal box, containing event type, id, channel name, avg. signal in 3X3X3 box of every channel
 opstruct.dfc_array = dfc_array;   % dynam. func. conn. (across all seg.) btw. ref. and targ. channels
 
 opstruct.ch_rho_sp = ch_rho_sp;   % array spearman rho btw. num. spikes and dfc with p-values attached
