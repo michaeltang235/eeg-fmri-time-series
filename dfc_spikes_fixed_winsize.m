@@ -337,9 +337,62 @@ for sess_ind = 1:length(fdnames)   % for each run
     end
 end
 
+% next, for array (ch_rho_sp_comb) storing spearman rho and p-values
+% obtained from all num. spikes and mean norm. alff combined from all runs, 
+ncol = size(rho_pval_comb_all, 2);   % get num. of col. established
 
+rho_pval_comb_all(:, ncol+1:ncol+2) = ch_rho_sp_comb(:, end-1:end);
 
+% get total number of columns established
+ncol_all = size(rho_pval_comb_all, 2);
 
+% initialize array to store headers required for table
+headers_req = {};
+runind = 1;   % initialize run index
+
+% first three col. are event type and channel names
+for j = 1:ncol-3   % for every remaining col. 
+    if mod(j, 2) == 1   % if col. num. is odd
+        headers_req{j} = ['corr. coeff._', num2str(window_size), ...
+            '_run_ind_', num2str(runind)];   % construct details of corr. coeff.
+    end
+    if mod(j, 2) == 0   % if col. num is even
+        headers_req{j} = ['pval_', num2str(window_size), ...
+            '_run_ind_', num2str(runind)];   % construct details of p-value
+        %   once both details about corr. coeff. and p-value are
+        %   constructed, increment runind by 1 for next run
+        runind = runind + 1;
+    end
+end
+
+headers_req{ncol-3+1} = ['corr. coeff._', num2str(window_size), ...
+            '_run_ind_', 'all'];   % construct details of corr. coeff.
+headers_req{ncol-3+2} = ['pval_', num2str(window_size), ...
+            '_run_ind_', 'all'];
+
+% convert cell array to table and add table headers
+table_rho_pval_comb = cell2table(rho_pval_comb_all, ...
+    'VariableNames',{'event type', 'ref channel name', 'targ channel name', headers_req{:}});
+
+% format filename for table
+filename_table_comb = ['sub', subnum, '_table_ns_dfc_run_all' ...
+    '_winsize_', num2str(window_size), '.csv'];
+table_comb_path = fullfile(fname_op, filename_table_comb);
+
+% write resultant table to path 
+if op_results == 1
+    writetable(table_rho_pval_comb, table_comb_path);   % table of clin. det. ch.
+end
+
+% store rho_pval_comb array under every fieldname in struct.
+for sess_ind = 1:length(fdnames)
+    terms.(fdnames{sess_ind}).rho_pval_comb_all = rho_pval_comb_all;
+end
+
+% update terms struct. to path
+if op_results == 1
+    save(fullfile(fname_op, filename_op), 'terms', '-v7.3');
+end
 
 
 end   % end if length(fdnames) >= 1
