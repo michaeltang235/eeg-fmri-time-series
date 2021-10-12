@@ -257,12 +257,20 @@ for i = 1:size(dfc_array_all, 1)   % for every row in dfc_array_all
 	cur_ev_type = dfc_array_all{i, 1};
 		
 	ev_row_ind_req = 0;   % initialize row index 
-	for row_ind = 1:size(ev_sess_ind)   % for every row in event session array
+	for row_ind = 1:size(ev_sess_ind, 1)   % for every row in event session array
 	    if ismember(cur_ev_type, ev_sess_ind{row_ind, 1})   % if event type matched
 		ev_row_ind_req = row_ind;   % obtain row index
 	    end
 	end
 	
+	% if no matching event row index (ev_row_ind_req) is found, 
+	% pass control to the next iteration of for loop (next channel pair), 
+	% skipping remaining statements in the body
+	if isequal(ev_row_ind_req, 0)
+	     disp('no channel pair found')
+	     continue
+	end 
+
 	% get session indices by row index
 	sess_ind_req = ev_sess_ind{ev_row_ind_req, end};
 	
