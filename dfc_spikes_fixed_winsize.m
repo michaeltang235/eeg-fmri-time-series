@@ -11,7 +11,7 @@ tic
 % BEGIN USER INPUT
 
 % enter subject number (str)
-subnum = '14';
+subnum = '41';
 
 % enter path to directory where all input files are located
 directname = ['/work/levan_lab/mtang/fmri_project/', 'sub', subnum];
@@ -253,19 +253,41 @@ for i = 1:size(dfc_array_all, 1)   % for every row in dfc_array_all
         % update id_pair_found array
         id_pair_found = [id_pair_found; [ref_id, targ_id]];
         
-        ind_ref = find([dfc_array_all{:, 2}] == ref_id);   % row index where id equals to ref. id
-        ind_targ = find([dfc_array_all{:, 3}] == targ_id);   % row index where id equals to targ. id
-    
-        % use intersect to find commonrow indices in both ref and targ arrays
-        ind_matched = intersect(ind_ref, ind_targ);
+	% get current event type and session indices associated
+	cur_ev_type = dfc_array_all{i, 1};
+		
+	ev_row_ind_req = 0;   % initialize row index 
+	for row_ind = 1:size(ev_sess_ind)   % for every row in event session array
+	    if ismember(cur_ev_type, ev_sess_ind{row_ind, 1})   % if event type matched
+		ev_row_ind_req = row_ind;   % obtain row index
+	    end
+	end
+	
+	% get session indices by row index
+	sess_ind_req = ev_sess_ind{ev_row_ind_req, end};
+	
+	% initialize array for storing dfc from all sessions related
+	dfc_array_related = {};
+	
+	% obtain dfc of current channel pair from required sessions 
+    	for sess_ind = sess_ind_req(1):sess_ind_req(end)   % every sess. req.
+	    dfc_array_obtained = terms.(fdnames{sess_ind}).dfc_array;
+	    dfc_array_related = [dfc_array_related; dfc_array_obtained];
+	end
+
+	ind_ref = find([dfc_array_related{:, 2}] == ref_id);   % row index where id equals to ref. id
+        ind_targ = find([dfc_array_related{:, 3}] == targ_id);   % row index where id equals to targ. id
         
+        % use intersect to find commonrow indices in both ref and targ arrays 
+	ind_matched = intersect(ind_ref, ind_targ);
+
 	% obtain portion of array with indices matched
-	dfc_minor = dfc_array_all(ind_matched, :);
+	dfc_minor = dfc_array_related(ind_matched, :);
 
         % ind_matched comes in the form [a b], where a and b are common row
         % indices, use the first entry in ind_matched (i.e. a) to get all
         % necessary info (event type, ids, name, etc ...)
-        dfc_comb(rnum, 1:5) = dfc_array_all(ind_matched(1), 1:5);   % assign nescessary info.
+        dfc_comb(rnum, 1:5) = dfc_array_related(ind_matched(1), 1:5);   % assign nescessary info.
         dfc_comb{rnum, 6} = horzcat(dfc_minor{:, end});   % hor. concatenate dfc from all runs
         rnum = rnum + 1;    % increment row number by 1 for next channel pair
     end
