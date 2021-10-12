@@ -11,7 +11,7 @@ tic
 % BEGIN USER INPUT
 
 % enter subject number (str)
-subnum = '41';
+subnum = '14';
 
 % enter path to directory where all input files are located
 directname = ['/work/levan_lab/mtang/fmri_project/', 'sub', subnum];
@@ -284,7 +284,7 @@ for i = 1:size(dfc_array_all, 1)   % for every row in dfc_array_all
 	% obtain portion of array with indices matched
 	dfc_minor = dfc_array_related(ind_matched, :);
 
-        % ind_matched comes in the form [a b], where a and b are common row
+        % ind_matched comes in the form [a b c etc...], where a, b, c, etc., are common row
         % indices, use the first entry in ind_matched (i.e. a) to get all
         % necessary info (event type, ids, name, etc ...)
         dfc_comb(rnum, 1:5) = dfc_array_related(ind_matched(1), 1:5);   % assign nescessary info.
