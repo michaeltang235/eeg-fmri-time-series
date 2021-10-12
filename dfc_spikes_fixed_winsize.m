@@ -867,6 +867,13 @@ for i = 1:size(sig_box, 1)   % each row in sig_box
     end
 end
 
+% return control to function if no channel pair is formed
+% e.g. all channels are of the same type
+if isempty(dfc_array)
+    sprintf('no channel pair is formed in dfc_array')
+    return
+end
+
 % % remove repeated channel pairs, e.g. correlations btw. channel ids 1, 2,
 % % and 2, 1 are duplicated
 % 
