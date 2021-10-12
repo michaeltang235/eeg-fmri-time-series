@@ -838,9 +838,13 @@ row = 1;   % initialize row number as 1
 
 for i = 1:size(sig_box, 1)   % each row in sig_box
     for j = 1:size(sig_box, 1)   % scan again each row in sig_box
-        % only compute corr. coeff. if ref. and targ. are not the same
-        % channel
-        if ~isequal(sig_box{i, 2}, sig_box{j, 2})
+	
+	% obtain ref. and targ. channel type using regexp
+	ref_name = regexp(sig_box{i, 3}, '[A-Z]*', 'match');
+	targ_name = regexp(sig_box{j, 3}, '[A-Z]*', 'match');
+
+	% only compute corr. coeff. if ref. and targ. are of different types
+	if ~strcmp(ref_name, targ_name)
             dfc_array{row, 1} = sig_box{j, 1};   % event type assoc. of target channel  
             dfc_array{row, 2} = sig_box{i, 2};   % id of ref. ele. pair
             dfc_array{row, 3} = sig_box{j, 2};   % id of target ele. pair
