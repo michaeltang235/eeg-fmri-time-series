@@ -116,9 +116,12 @@ for sess_ind = 1:length(fds_spikes_stats)   % for each field
     end
 end
 
+% get common indices between the two arrays
+common_ind = intersect(fd_ind_dfc, fd_ind_spikes_stats);
+
 % access all non-empty fields using indices acquired
-fdnames_dfc = fds_dfc(fd_ind_dfc);   % dfc
-fdnames_spikes_stats = fds_dfc(fd_ind_spikes_stats);   % spikes stats
+fdnames_dfc = fds_dfc(common_ind);   % dfc
+fdnames_spikes_stats = fds_spikes_stats(common_ind);   % spikes stats
 
 % variable interested: 
 % spearman's rho and p-value btw. dfc and number of spikes (A),
@@ -130,7 +133,7 @@ fdnames_spikes_stats = fds_dfc(fd_ind_spikes_stats);   % spikes stats
 % A is stored in cell array called rho_pval_comb_all, which is saved
 % under EVERY field in struct., so access first field under struct., and
 % obtain the cell array. Similar procedure is applied to B
-rho_pval_comb_all = st_alff.terms.(fdnames_dfc{1}).rho_pval_comb_all;   % spearman rho and p-value
+rho_pval_comb_all = st_dfc.terms.(fdnames_dfc{1}).rho_pval_comb_all;   % spearman rho and p-value
 spikes_stats_all = st_spikes_stats.terms.(fdnames_spikes_stats{1}).spikes_stats_all;   % stats of number of spikes 
 
 % END PART (II): load var. interested from paths
