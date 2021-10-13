@@ -104,7 +104,7 @@ fds_spikes_stats = fieldnames(st_spikes_stats.terms);   % spikes stats struct.
 % get non-empty fieldnames for dfc and spikes_stats struct.
 fd_ind_dfc = [];   % initialize array for storing indices of non-empty fields
 for sess_ind = 1:length(fds_dfc)   % for each field
-    if ~isempty(st_dfc.terms.(fds_alff{sess_ind}))   % check if field is empty
+    if ~isempty(st_dfc.terms.(fds_dfc{sess_ind}))   % check if field is empty
         fd_ind_dfc = [fd_ind_dfc sess_ind];   % if not, append index to array
     end
 end
