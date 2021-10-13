@@ -143,15 +143,16 @@ spikes_stats_all = st_spikes_stats.terms.(fdnames_spikes_stats{1}).spikes_stats_
 
 % with A and B obtained, assemble the array, with format given below
 % col. 1 = event type
-% col. 2 = channel name
-% col. 3 = rho_all runs
-% col. 4 = p-value
-% col. 5 = Fisher's z all runs
-% col. 6 = mean number of spikes, all runs
-% col. 7 = standard deviation of number of spikes, all runs
+% col. 2 = ref. channel name
+% col. 3 = target channel name
+% col. 4 = rho_all runs
+% col. 5 = p-value
+% col. 6 = Fisher's z all runs
+% col. 7 = mean number of spikes, all runs
+% col. 8 = standard deviation of number of spikes, all runs
 
-% assiagn first two columns of rho_pval_comb_all to array_req
-array_req = rho_pval_comb_all(:, 1:2);   % assign event type and assoc. channel names
+% assiagn first three columns of rho_pval_comb_all to array_req
+array_req = rho_pval_comb_all(:, 1:3);   % assign event type and assoc. ref. and targ. channel names
 
 % get number of col. established
 colct = size(array_req, 2);
@@ -165,7 +166,7 @@ colct = size(array_req, 2);
 
 % then, compute fisher's z for every spearman's rho obtained
 for i = 1:size(array_req, 1)
-    array_req{i, colct+1} = atanh(array_req{i, 3});
+    array_req{i, colct+1} = atanh(array_req{i, end-1});
 end
 
 % get number of col. established
