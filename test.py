@@ -101,4 +101,64 @@ ele_sorted = sort_elect(elect_df);
 # END PART (IV): sorte electrodes by their types
 #---------------------------------------------------------------------------
 
+# Part (V): find midpoint of each pair of electrode contacts in both mni
+# and image space
+
+
+#---------------------------------------------------------------------------
+# Part (I): find midpoint of each pair of electrode contacts
+
+# initialize list for storing midpoint of every channel (electrode pair)
+# in this nested list, every entry contains a list with format given below:
+# 1st entry = name tag of channel
+# 2nd entry = list of midpt corrdinates [x, y, z]
+midpt = []
+
+# scan across every row within every entry in sorted ele. list, 
+# then assemble name tag of channel, 
+# and compute midpoint of x-, y-, and z-coordinates
+for i in range(len(ele_sorted)):   # every entry in sorted ele. list
+    cur_list = []   # initialize list for storing info. of curr. ele. type
+    # within curr. entry in nested list, scan across every sub-entry, 
+    # format name tag for channel and compute midpoint
+    for j in range(len(ele_sorted[i]) - 1):
+        pair_name = ele_sorted[i][j][0] + '-' + ele_sorted[i][j+1][0]
+        mx = 0.5*(ele_sorted[i][j][1] + ele_sorted[i][j+1][1]) 
+        my= 0.5*(ele_sorted[i][j][2] + ele_sorted[i][j+1][2]) 
+        mz= 0.5*(ele_sorted[i][j][3] + ele_sorted[i][j+1][3])
+        
+        # append info. of every channel to curr. list (curr. ele. type)
+        cur_list.append([pair_name, [mx, my, mz]])      
+        
+    # after looping through all elements in current entry (all channels in 
+    # current type, append curr. list to nested list, midpt)
+    midpt.append(cur_list)
+        
+# END Part (I): find midpoint of each pair of electrode contacts                        
+#---------------------------------------------------------------------------
+# Part (II): convert coordinates from mni space to image space
+                                  
+# Part (II): convert coordinates from mni space to image space
+#---------------------------------------------------------------------------
+
+
+
+
+
+
+# MNI TO IJK
+input_list = [-35, 5, 10]
+mnicoord = [-35, 5, 10]
+
+srow_x = swra_header['srow_x']
+srow_y = swra_header['srow_y']
+srow_z = swra_header['srow_z']
+
+srowmat = np.array([srow_x[:3], srow_y[:3], srow_z[:3]]) 
+
+matb3 = mnicoord - [srow_x[-1], srow_y[-1], srow_z[-1]]  
+        
+# END Part (V): find midpoint of each pair of electrode contacts in both mni
+# and image space
+#---------------------------------------------------------------------------
 
