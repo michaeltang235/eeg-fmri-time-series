@@ -12,7 +12,7 @@ import numpy as np
 import nibabel as nib 
 
 #import myfunction
-from myfunction import get_path, sort_elect
+from myfunction import get_path, sort_elect, mni2ijk, get_midpt_elect
 
 #---------------------------------------------------------------------------
 #---------------------------------------------------------------------------
@@ -96,7 +96,7 @@ for t in range(swra_img.shape[-1]):   # for swra img at every instant in time
 # Part (IV): sort electrodes by their types
 
 # use sort_elect to sort electrode array by their types
-ele_sorted = sort_elect(elect_df);
+ele_sorted = sort_elect(elect_df)
 
 # END PART (IV): sorte electrodes by their types
 #---------------------------------------------------------------------------
@@ -104,61 +104,98 @@ ele_sorted = sort_elect(elect_df);
 # Part (V): find midpoint of each pair of electrode contacts in both mni
 # and image space
 
+midpt = get_midpt_elect(ele_sorted, swra_header)
 
-#---------------------------------------------------------------------------
-# Part (I): find midpoint of each pair of electrode contacts
-
-# initialize list for storing midpoint of every channel (electrode pair)
-# in this nested list, every entry contains a list with format given below:
-# 1st entry = name tag of channel
-# 2nd entry = list of midpt corrdinates [x, y, z]
-midpt = []
-
-# scan across every row within every entry in sorted ele. list, 
-# then assemble name tag of channel, 
-# and compute midpoint of x-, y-, and z-coordinates
-for i in range(len(ele_sorted)):   # every entry in sorted ele. list
-    cur_list = []   # initialize list for storing info. of curr. ele. type
-    # within curr. entry in nested list, scan across every sub-entry, 
-    # format name tag for channel and compute midpoint
-    for j in range(len(ele_sorted[i]) - 1):
-        pair_name = ele_sorted[i][j][0] + '-' + ele_sorted[i][j+1][0]
-        mx = 0.5*(ele_sorted[i][j][1] + ele_sorted[i][j+1][1]) 
-        my= 0.5*(ele_sorted[i][j][2] + ele_sorted[i][j+1][2]) 
-        mz= 0.5*(ele_sorted[i][j][3] + ele_sorted[i][j+1][3])
-        
-        # append info. of every channel to curr. list (curr. ele. type)
-        cur_list.append([pair_name, [mx, my, mz]])      
-        
-    # after looping through all elements in current entry (all channels in 
-    # current type, append curr. list to nested list, midpt)
-    midpt.append(cur_list)
-        
-# END Part (I): find midpoint of each pair of electrode contacts                        
-#---------------------------------------------------------------------------
-# Part (II): convert coordinates from mni space to image space
-                                  
-# Part (II): convert coordinates from mni space to image space
-#---------------------------------------------------------------------------
-
-
-
-
-
-
-# MNI TO IJK
-input_list = [-35, 5, 10]
-mnicoord = [-35, 5, 10]
-
-srow_x = swra_header['srow_x']
-srow_y = swra_header['srow_y']
-srow_z = swra_header['srow_z']
-
-srowmat = np.array([srow_x[:3], srow_y[:3], srow_z[:3]]) 
-
-matb3 = mnicoord - [srow_x[-1], srow_y[-1], srow_z[-1]]  
+# nested list midpt groups electrodes of same type into one element, 
+# convert midpt to single layer list, with same column spec.
+midpt_all = []   # initialize list
+for i in range(len(midpt)):   # for every type of electrode
+    for j in range(len(midpt[i])):   # for every channel in curr. type
+        midpt_all.append(midpt[i][j])   # append info. to list
         
 # END Part (V): find midpoint of each pair of electrode contacts in both mni
 # and image space
 #---------------------------------------------------------------------------
 
+# Part (VI): get names and coordinates of channels with high spike rates
+# during fmri scan
+
+# format path to event location file
+event_file_path = '/work/levan_lab/mtang/fmri_project/event_types_locations.txt'
+
+# use pd.read_csv to get info in input txt file, 
+# each row of the input file contains subject number, event marking, the 
+# corresponding event type, and its location
+ev_loc_df = pd.read_csv(event_file_path)   
+
+# obtain series of booleans which consists of rows with subject number
+# equal to the one that is being examined, then use the series to select 
+# the rows interested
+row_req = ev_loc_df.iloc[:, 0] == int(subnum)
+
+# use row_req to select the portion of ev_loc_df wanted
+ev_loc_df_selected = ev_loc_df.loc[row_req]
+
+# get event types from 3rd col. and their locations from the rightmost col.
+# remove white spaces in name tag, then convert them to list
+ev_types = ev_loc_df_selected.iloc[:, 2].tolist()
+ev_locations = ev_loc_df_selected.iloc[:, -1].str.strip().tolist()
+
+# format channel names from ev_locations list, with the following format
+# the i^th entry denotes the i^th type of channel
+# the j^th element within i^th entry denotes the j^th channel name 
+# e.g. ch_name[0][2] denotes the 2nd channel name under the 0^th type 
+ch_name = []   # initialize list
+
+# scan across every entry in ev_locations, search for alphabetic and numeric
+# components of the name tag, then form number pairs and assemble channel names
+# e.g. given LA1-5, further decompose the number sequence to intergal
+# increments, so that we have LA1-2, LA2-3, LA3-4, LA4-5
+
+for item in ev_locations:   # every element in ev_locations list
+    ch_name_cur_type = []   # initialize list for current channel type
+    ch_type = re.search('[a-zA-Z]+', item).group()   # get alphabetic compo.
+    ele_con_num = re.findall('[0-9]+', item)   # get numeric compo.
+    
+    # if numeric compo. is not empty, form number sequence
+    if ele_con_num:
+        num_i = int(ele_con_num[0])   # initial number of sequence
+        num_f = int(ele_con_num[1])   # final number of sequence
+        num_s = num_i   # start number
+        
+        # as long as start number is less than final number
+        while num_s < num_f:
+            num_pair = np.linspace(num_s, num_s + 1, 2, dtype = int)   # form pair
+            ch_name_str = ch_type + str(num_pair[0]) + '-' + ch_type \
+                + str(num_pair[1])   # construct channel name
+            ch_name_cur_type.append(ch_name_str)   # append name to curr. list
+            num_s = num_s + 1   # increment start number by 1
+        
+        # after constructing names for every elements in the number sequence, 
+        # append curr. list of channel names to ch_name
+        ch_name.append(ch_name_cur_type)
+        
+    # if number is not recorded, leave it as it is
+    else:
+        ch_name.append([ch_type])
+        
+# nested list ch_name groups channels of same type into one element, 
+# convert ch_name to single layer list, with same column spec.
+ch_name_all = []   # initialize list
+for i in range(len(ch_name)):   # for every type of channel
+    for j in range(len(ch_name[i])):   # for every channel in curr. type
+        ch_name_all.append(ch_name[i][j])   # append info. to list
+        
+# match channel name obtained to those in midpt_all nested list, if matched,
+# assign all relevant info., including midpt corrdinates in mni and image
+# spaces.
+# if contact number is not given, match all available contacts for the channel
+# type. i.e. if given LMT, instead of LMT1-2, match all available
+# contacts in midpt_all, which gives LMT1-2, LMT2-3, and so on.
+        
+        
+
+
+
+
+ 
