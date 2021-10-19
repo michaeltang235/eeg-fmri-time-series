@@ -166,7 +166,7 @@ colct = size(array_req, 2);
 
 % then, compute fisher's z for every spearman's rho obtained
 for i = 1:size(array_req, 1)
-    array_req{i, colct+1} = atanh(array_req{i, end-1});
+    array_req{i, colct+1} = atanh(array_req{i, 4});
 end
 
 % get number of col. established
