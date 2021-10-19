@@ -180,11 +180,14 @@ for item in ev_locations:   # every element in ev_locations list
         ch_name.append([ch_type])
         
 # nested list ch_name groups channels of same type into one element, 
-# convert ch_name to single layer list, with same column spec.
+# convert ch_name to single layer list, with event type stored under the 1st
+# entry, and the associated channel names stored under the 2nd entry, of every
+# unit in the nested list
 ch_name_all = []   # initialize list
 for i in range(len(ch_name)):   # for every type of channel
     for j in range(len(ch_name[i])):   # for every channel in curr. type
-        ch_name_all.append(ch_name[i][j])   # append info. to list
+        # append event type and assoc. channel name
+        ch_name_all.append([ev_types[i], ch_name[i][j]])   
         
 # match channel name obtained to those in midpt_all nested list, if matched,
 # assign all relevant info., including midpt corrdinates in mni and image
@@ -192,6 +195,27 @@ for i in range(len(ch_name)):   # for every type of channel
 # if contact number is not given, match all available contacts for the channel
 # type. i.e. if given LMT, instead of LMT1-2, match all available
 # contacts in midpt_all, which gives LMT1-2, LMT2-3, and so on.
+
+ch_name_matched = []
+for item in ch_name_all:
+    if '-' in item[1]:
+        for i in range(len(midpt_all)):
+            if item[1] == midpt_all[i][0]:
+                cur_list = [item[0]]
+                cur_list.extend(midpt_all[i])
+        
+        ch_name_matched.append(cur_list)
+    else:
+        search_pat = item[1] + '[\d*]-' + item[1] + '[\d*]'
+        for i in range(len(midpt_all)):
+            if re.search(search_pat, midpt_all[i][0]):
+                cur_list = [item[0]]
+                cur_list.extend(midpt_all[i])
+                ch_name_matched.append(cur_list)
+                
+            
+        
+    
         
         
 
