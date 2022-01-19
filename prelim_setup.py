@@ -306,8 +306,72 @@ def get_midpt_elect(ele_sorted, nifti_img_info):
 
 #---------------------------------------------------------------------------
 #---------------------------------------------------------------------------
+# FILER_MOTION_FUNCTION:
+
+# Given motion parameters, this function removes motion artifacts from fmri 
+# time series by solving the system of linear euqations (A*beta = y), where A 
+# is the motion parameter matrix defined below, y is the time series for each 
+# voxel, and beta is the least-square fitted solutions to the system. After, 
+# residuals of signal without motion artifacts are given by y - A*beta
     
+# FILTER_MOTION(MO_PARA, SIGNAL):
+# inputs:
+# MO_PARA is numpy array of motion parameters
+# SIGNAL is array of signal required to be motion-filtered, dim. of signal
+# array is ni X nj X nk X nt, where ni, nj, nk denote dim. in x, y, and z
+# directions, and nt denotes dim. in time domain.
+# and outputs
+# RESIDUALS, the time series of signal with motion artifacts removed, with
+# dim. the same as SIGNAL
+
+def filter_motion(mo_para, signal):
     
+    # initialize output var., residual
+    residuals  = []
+    
+    # The 24 regressors are the 6 motion time series, 
+    # those same 6 time series shifted by one scan, 
+    # and the squares of the previous 12 regressors
+
+    # create 6 time series shifted by one scan, horiz. conca. with
+    # motion para. read to form reg_shifted 
+    mo_shifted = np.concatenate((np.tile(0, (1, 6)), mo_para[:-1, :]), axis=0)   # motion para. shifted by one scan
+    reg_shifted = np.concatenate((mo_para, mo_shifted), axis=1)   # combine motion para. read with shifted para.
+
+    # square the 12 regressors and add them all toegther to form reg_sq
+    mo_sq = np.square(reg_shifted)   # square of the previous 12 motion regressors
+    reg_sq = np.concatenate((reg_shifted, mo_sq), axis=1)   # add mo_sq to list of regressors
+    
+    # create constant term to form all regressors required
+    mo_constant = np.ones((reg_sq.shape[0], 1))   # constant term
+    reg_mo = np.concatenate((reg_sq, mo_constant), axis=1)   # assemble all motion regressors
+    
+    # initialize residuals array for storing motion-filtered signals
+    residuals = np.zeros(signal.shape)
+    
+    # dimensions of input singal 
+    ni = signal.shape[0]   # dim. in x
+    nj = signal.shape[1]   # dim. in y
+    nk = signal.shape[2]   # dim. in z
+    
+    # loop through input signal array, perform motion filtering in each voxel
+    for i in range(ni):   # for each voxel in x
+        for j in range(nj):   # for each voxel in y
+            for k in range(nk):   # for each voxel in z
+            
+            # solve system of eq. (A*beta = y) for beta, where A is the matrix
+            # of motion regressors and y is the time series, select 0th entry of 
+            # output to get the least sq. soluton, beta
+            
+                beta = np.linalg.lstsq(reg_mo, signal[i, j, k, :], rcond=None)[0]
+                
+                # comput the residuals by subtracting fitted regressors
+                # i.e. time series - motion regressor * beta (matrix multip.)
+                residuals[i, j, k, :] = signal[i, j, k, :] - np.matmul(reg_mo, beta)
+                
+    return residuals
+                
+
 
 #---------------------------------------------------------------------------
 #---------------------------------------------------------------------------
