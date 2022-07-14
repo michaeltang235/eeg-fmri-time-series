@@ -324,25 +324,32 @@ for run_ind = 1:numel(swra_file_path)   % for every session
     % col. 4 = midpoint coordinates in image space
     % col. 5 = ied rate measured over entire scan
     % col. 6 = mean normalized alff
-    ch_name_matched_ied_alff = ch_name_matched;
     
     % get number of col. established
-    ncol = size(ch_name_matched_ied_alff, 2);
+    ncol = size(ch_name_matched, 2);
   
     % assign ied rate measured over entire scan to each channel available
-    for row = 1:size(ch_name_matched_ied_alff, 1)   % for each row in ch_name_matched_ied_reho
-        ev_type = ch_name_matched_ied_alff{row, 1};   % get event type of curr. channel
+    ch_name_matched_ied_alff = {};   % initialize array
+    row_est = 1;   % initialize row number for ch_name_matched_ied_alff array
+    
+    for row = 1:size(ch_name_matched, 1)   % for each row in ch_name_matched
+        ev_type = ch_name_matched{row, 1};   % get event type of curr. channel
         for i = 1:size(ied_during_scan, 1)   % for every row in ied_during_scan array
             % get event type from col. 1, and check is there is match
             if ismember(ev_type, ied_during_scan{i, 1})
                 % if so, assign ied rate (per min.) measured over entire
                 % scan to curr. channel
-                ch_name_matched_ied_alff{row, ncol+1} = ied_during_scan{i, end};
+                ch_name_matched_ied_alff(row_est, 1:ncol) = ch_name_matched(row, :);
+                ch_name_matched_ied_alff{row_est, ncol+1} = ied_during_scan{i, end};
+                
+                % increment row num. by 1 for next channel with matched event type
+                row_est = row_est + 1; 
             end
         end
     end
     
-    % assign mean normalized alff measured over entire scan to each channel available
+    % assign reho measured over entire scan to each channel that has
+    % matched ied type found
     for row = 1:size(ch_name_matched_ied_alff, 1)   % for every row in ch_name_matched_ied_alff
         ch_name_cur = ch_name_matched_ied_alff{row, 2};   % get current channel name
         for i = 1:size(sig_box_all, 1)   % for every row in sig_box_all
