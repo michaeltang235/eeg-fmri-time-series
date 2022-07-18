@@ -7,8 +7,8 @@ close all
 % https://stats.stackexchange.com/questions/83347/relationship-between-r2-and-correlation-coefficient
 % https://towardsdatascience.com/r%C2%B2-or-r%C2%B2-when-to-use-what-4968eee68ed3
 %---------------------------------------------------------------------------
-% Drawn on 'static_analysis_reho.mat', which has 
-% (i) ReHo, 
+% Drawn on 'static_analysis_alff.mat', which has 
+% (i) ALFF, 
 % (ii) IED rate mesured during long-term monitoring
 % (iii) IED rate measured over entire scan, for each session of every
 % subject
@@ -19,13 +19,13 @@ close all
 % BEGIN USER INPUT
 
 % enter path where input struct. is stored at
-% directname = ['/work/levan_lab/mtang/fmri_project/matrices', filesep 'static_analysis_reho'];   % direct. of output matrix
-directname = 'C:\Users\siumichael.tang\Downloads\fmri_project\matrices\static_analysis_reho';
-filename_input = 'static_analysis_reho.mat';   % filename of output file
+% directname = ['/work/levan_lab/mtang/fmri_project/matrices', filesep 'static_analysis_alff'];   % direct. of output matrix
+directname = 'C:\Users\siumichael.tang\Downloads\fmri_project\matrices\static_analysis_alff';
+filename_input = 'static_analysis_alff.mat';   % filename of output file
 
 % enter path where plots are saved at
-% directname_op = '/work/levan_lab/mtang/fmri_project/plots/static_analysis_reho';
-directname_op = 'C:\Users\siumichael.tang\Downloads\fmri_project\plots\static_analysis_reho';
+% directname_op = '/work/levan_lab/mtang/fmri_project/plots/static_analysis_alff';
+directname_op = 'C:\Users\siumichael.tang\Downloads\fmri_project\plots\static_analysis_alff';
 
 % enter if user wants to write plots to file (1=yes, 0=no)
 op_results = 1;
@@ -48,11 +48,11 @@ fd_name_sub = fieldnames(st.grand);
 f_grand = figure('units','normalized','outerposition',[0 0 1 1]);
 
 %-----------------------------------------------------------------------------
-% (I): MAKE PLOT OF (Y) REHO AGAINST (X) IED RATE MEASUDRED DURING LONG-TERM 
+% (I): MAKE PLOT OF (Y) ALFF AGAINST (X) IED RATE MEASUDRED DURING LONG-TERM 
 % MONITORING FOR ALL SESSIONS
 
 % initialize array for storing the required variables from all sessions
-reho_all_sess = [];   % reho
+alff_all_sess = [];   % alff
 ied_long_term_all_sess_log = [];   % ied_{long term} on log-scale
 
 for sub_ind = 1:numel(fd_name_sub)   % for each subject
@@ -64,12 +64,12 @@ for sub_ind = 1:numel(fd_name_sub)   % for each subject
             % access sub-structure of curr. sess.
             st_cur = st.grand.(fd_name_sub{sub_ind}).(fd_run_cur{run_ind});
             
-            % get array of reho of every channel in curr. session from
+            % get array of alff of every channel in curr. session from
             % sig_box_all, (rightmost col.)
-            reho_cur = st_cur.sig_box_all(:, end);
+            alff_cur = st_cur.sig_box_all(:, end);
             
-            % concatenate vertically reho_cur to reho_all_sess 
-            reho_all_sess = [reho_all_sess; cell2mat(reho_cur)];
+            % concatenate vertically alff_cur to alff_all_sess 
+            alff_all_sess = [alff_all_sess; cell2mat(alff_cur)];
             
             % get ied rate measured during long-term monitoring in curr.
             % sess., (rightmost col.)
@@ -86,7 +86,7 @@ end
 % when applying log-scale on ied_{long term}, inf is obtained, filter out
 % those entries, and obtain the corresponding entries in reho_all_sess
 ind_req = ~isinf(ied_long_term_all_sess_log);   % get indices of non-inf entries in ied array
-reho_all_sess_filt = reho_all_sess(ind_req);   % get corresponding entries in reho array
+alff_all_sess_filt = alff_all_sess(ind_req);   % get corresponding entries in reho array
 ied_long_term_all_sess_log_filt = ied_long_term_all_sess_log(ind_req);   % get non-inf entries in ied array
 
 % after obtaining required arrays (non-inf entries) from all sessions, make plot
@@ -94,14 +94,14 @@ ied_long_term_all_sess_log_filt = ied_long_term_all_sess_log(ind_req);   % get n
 subplot(1, 2, 1);
 
 %----------------------------------------
-% make plot of (Y) ReHo against (X) IED_{LONG TERM} on log-scale
-scatter(ied_long_term_all_sess_log_filt, reho_all_sess_filt, sz, 'filled', 'MarkerFaceColor', 'b'); hold on
+% make plot of (Y) ALFF against (X) IED_{LONG TERM} on log-scale
+scatter(ied_long_term_all_sess_log_filt, alff_all_sess_filt, sz, 'filled', 'MarkerFaceColor', 'b'); hold on
 
 %----------------------------------------
 % add regression line to set of points:
 
 % get coefficients of best-fit line
-p_coef1 = polyfit(ied_long_term_all_sess_log_filt, reho_all_sess_filt, 1);
+p_coef1 = polyfit(ied_long_term_all_sess_log_filt, alff_all_sess_filt, 1);
 
 % get predicted y-values using coefficients above
 y_pred1 = polyval(p_coef1, ied_long_term_all_sess_log_filt);
@@ -113,7 +113,7 @@ plot(ied_long_term_all_sess_log_filt, y_pred1, 'k-', 'LineWidth', 1); hold on
 % add pearson coef (r) and its p-value to x-label:
 
 % as best-fit line is a simple regression model, r^2 = R^2
-[r_pear1, pval_pear1] = corr(ied_long_term_all_sess_log_filt, reho_all_sess_filt, 'Type', 'Pearson');
+[r_pear1, pval_pear1] = corr(ied_long_term_all_sess_log_filt, alff_all_sess_filt, 'Type', 'Pearson');
 
 % format pearson r str, round value to 3 d.p.
 r_pear_str1 = ['r = ', num2str(round(r_pear1, 3)), ', '];
@@ -121,7 +121,7 @@ r_pear_str1 = ['r = ', num2str(round(r_pear1, 3)), ', '];
 % if pval < 0.001, then show 'p < 0.001' on x-label, otherwise, show value
 % corrected to 1 sig. fig.
 if pval_pear1 < 0.001
-    pval_pear_str1 = 'p < 0.001';
+    pval_pear_str1 = 'p \(<\) 0.001';
 else
     pval_pear_str1 = ['p = ', num2str(round(pval_pear1, 1, 'significant'))];
 end
@@ -136,7 +136,7 @@ box on;
 % set x- and y-labels, 
 xlabel(['IED\(_{\mathrm{long}}\)\(_{ }\)\(_{\mathrm{term}}\) on log scale, ', ...
     stat_fig_str1], 'Interpreter','latex');
-ylabel('ReHo','Interpreter','latex');
+ylabel('ALFF','Interpreter','latex');
 
 % set axis fontsize (default = 10)
 ax1 = gca;
@@ -159,13 +159,13 @@ pbaspect([xmax1-xmin1, pbr*(xmax1-xmin1), 1]); % multiple y-axis by the factor
 text(0.93, 0.95, '(a)', 'Interpreter', ...
     'latex','FontWeight','bold', 'Units', 'normalized', 'FontSize', 14);   
        
-% END (I): MAKE PLOT OF (Y) REHO AGAINST (X) IED RATE MEASUDRED DURING LONG-TERM 
+% END (I): MAKE PLOT OF (Y) ALFF AGAINST (X) IED RATE MEASUDRED DURING LONG-TERM 
 % MONITORING FOR ALL SESSIONS
 %-----------------------------------------------------------------------------
-% (II): MAKE PLOT OF (Y) REHO AGAINST (X) IED RATE MEASUDRED DURING SCAN FOR ALL SESSIONS
+% (II): MAKE PLOT OF (Y) ALFF AGAINST (X) IED RATE MEASUDRED DURING SCAN FOR ALL SESSIONS
 
 % initialize array for storing the required variables from all sessions
-reho_ch_matched_all_sess = [];   % reho of channels with ied during scan registered
+alff_ch_matched_all_sess = [];   % alff of channels with ied during scan registered
 ied_during_scan_all_sess_log = [];   % ied_{during scan} on log-scale
 
 for sub_ind = 1:numel(fd_name_sub)   % for each subject
@@ -177,16 +177,16 @@ for sub_ind = 1:numel(fd_name_sub)   % for each subject
             % access sub-structure of curr. sess.
             st_cur = st.grand.(fd_name_sub{sub_ind}).(fd_run_cur{run_ind});
             
-            % get array of reho of matched channel with ied_{during scan} recorded
-            % in curr. session from ch_name_ied_reho (rightmost col.)
-            reho_ch_matched_cur = st_cur.ch_name_matched_ied_reho(:, end);
+            % get array of alff of matched channel with ied_{during scan} recorded
+            % in curr. session from ch_name_ied_alff (rightmost col.)
+            alff_ch_matched_cur = st_cur.ch_name_matched_ied_alff(:, end);
             
-            % concatenate vertically reho_ch_matched_cur to reho_ch_matched_all_sess 
-            reho_ch_matched_all_sess = [reho_ch_matched_all_sess; cell2mat(reho_ch_matched_cur)];
+            % concatenate vertically alff_ch_matched_cur to alff_ch_matched_all_sess 
+            alff_ch_matched_all_sess = [alff_ch_matched_all_sess; cell2mat(alff_ch_matched_cur)];
             
             % get ied rate measured during scan in curr. sess. (2nd
             % rightmost col. of ch_name_matched_ied_reho)
-            ied_during_scan_cur = st_cur.ch_name_matched_ied_reho(:, end-1);
+            ied_during_scan_cur = st_cur.ch_name_matched_ied_alff(:, end-1);
              
             % concatenate vertically log(ied_during_scan_cur) to
             % ied_during_scan_all_sess_log
@@ -201,14 +201,14 @@ end
 subplot(1, 2, 2);
 
 %----------------------------------------
-% make plot of (Y) ReHo against (X) IED_{LONG TERM} on log-scale
-scatter(ied_during_scan_all_sess_log, reho_ch_matched_all_sess, sz, 'filled', 'MarkerFaceColor', 'b'); hold on
+% make plot of (Y) ALFF against (X) IED_{LONG TERM} on log-scale
+scatter(ied_during_scan_all_sess_log, alff_ch_matched_all_sess, sz, 'filled', 'MarkerFaceColor', 'b'); hold on
 
 %----------------------------------------
 % add regression line to set of points:
 
 % get coefficients of best-fit line
-p_coef2 = polyfit(ied_during_scan_all_sess_log, reho_ch_matched_all_sess, 1);
+p_coef2 = polyfit(ied_during_scan_all_sess_log, alff_ch_matched_all_sess, 1);
 
 % get predicted y-values using coefficients above
 y_pred2 = polyval(p_coef2, ied_during_scan_all_sess_log);
@@ -220,7 +220,7 @@ plot(ied_during_scan_all_sess_log, y_pred2, 'k-', 'LineWidth', 1); hold on
 % add pearson coef (r) and its p-value to x-label:
 
 % as best-fit line is a simple regression model, r^2 = R^2
-[r_pear2, pval_pear2] = corr(ied_during_scan_all_sess_log, reho_ch_matched_all_sess, 'Type', 'Pearson');
+[r_pear2, pval_pear2] = corr(ied_during_scan_all_sess_log, alff_ch_matched_all_sess, 'Type', 'Pearson');
 
 % format pearson r str, round value to 3 d.p.
 r_pear_str2 = ['r = ', num2str(round(r_pear2, 3)), ', '];
@@ -243,7 +243,7 @@ box on;
 % set x- and y-labels, 
 xlabel(['IED\(_{\mathrm{during}}\)\(_{ }\)\(_{\mathrm{scan}}\) on log scale, ', ...
     stat_fig_str2], 'Interpreter','latex');
-ylabel('ReHo','Interpreter','latex');
+ylabel('ALFF','Interpreter','latex');
 
 % set axis fontsize (default = 10)
 ax2 = gca;
@@ -295,7 +295,7 @@ ax2.Position(1) = ax1.Position(1) + ax1.Position(3) + hdiff;
 
 %----------------------------------------
 % format filename for current plot
-filename_op = ['static_analysis_reho'];
+filename_op = ['static_analysis_alff'];
             
 % save figure to file 
 if op_results == 1
