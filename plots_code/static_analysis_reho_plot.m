@@ -28,7 +28,7 @@ filename_input = 'static_analysis_reho.mat';   % filename of output file
 directname_op = 'C:\Users\siumichael.tang\Downloads\fmri_project\plots\static_analysis_reho';
 
 % enter if user wants to write plots to file (1=yes, 0=no)
-op_results = 1;
+op_results = 0;
 
 % END USER INPUT
 %---------------------------------------------------------------------------
@@ -75,9 +75,9 @@ for sub_ind = 1:numel(fd_name_sub)   % for each subject
             % sess., (rightmost col.)
             ied_long_term_cur = st_cur.ied_long_term(:, end);
              
-            % concatenate vertically log(ied_long_term_cur) to
+            % concatenate vertically log10(ied_long_term_cur) to
             % ied_long_term_all_sess
-            ied_long_term_all_sess_log = [ied_long_term_all_sess_log; log(cell2mat(ied_long_term_cur))];
+            ied_long_term_all_sess_log = [ied_long_term_all_sess_log; log10(cell2mat(ied_long_term_cur))];
                    
         end
     end
@@ -116,14 +116,14 @@ plot(ied_long_term_all_sess_log_filt, y_pred1, 'k-', 'LineWidth', 1); hold on
 [r_pear1, pval_pear1] = corr(ied_long_term_all_sess_log_filt, reho_all_sess_filt, 'Type', 'Pearson');
 
 % format pearson r str, round value to 3 d.p.
-r_pear_str1 = ['r = ', num2str(round(r_pear1, 3)), ', '];
+r_pear_str1 = ['\(r = \) ', num2str(round(r_pear1, 3)), ', '];
 
 % if pval < 0.001, then show 'p < 0.001' on x-label, otherwise, show value
 % corrected to 1 sig. fig.
 if pval_pear1 < 0.001
-    pval_pear_str1 = 'p < 0.001';
+    pval_pear_str1 = '\(p < 0.001\)';
 else
-    pval_pear_str1 = ['p = ', num2str(round(pval_pear1, 1, 'significant'))];
+    pval_pear_str1 = ['\(p = \) ', num2str(round(pval_pear1, 1, 'significant'))];
 end
 
 % format str displaying stat. sig. btw. ReHo and IED_{long term}
@@ -134,7 +134,7 @@ box on;
 % grid on;
 
 % set x- and y-labels, 
-xlabel(['IED\(_{\mathrm{long}}\)\(_{ }\)\(_{\mathrm{term}}\) on log scale, ', ...
+xlabel(['IED\(_{\mathrm{long}}\)\(_{ }\)\(_{\mathrm{term}}\) on log scale [\(\mathrm{min}^{\mathrm{-1}}\)], ', ...
     stat_fig_str1], 'Interpreter','latex');
 ylabel('ReHo','Interpreter','latex');
 
@@ -145,6 +145,10 @@ ax1.FontSize = 12;
 % set interpreter of tick labels on both axes 
 ax1.TickLabelInterpreter = 'latex';
             
+% get y-axis min and max
+ymin1 = ax1.YLim(1);
+ymax1 = ax1.YLim(2);
+
 % % get x-axis min and max
 xmin1 = min(ied_long_term_all_sess_log_filt);
 xmax1 = max(ied_long_term_all_sess_log_filt);
@@ -157,7 +161,7 @@ pbaspect([xmax1-xmin1, pbr*(xmax1-xmin1), 1]); % multiple y-axis by the factor
 
 % place string on plot
 text(0.93, 0.95, '(a)', 'Interpreter', ...
-    'latex','FontWeight','bold', 'Units', 'normalized', 'FontSize', 14);   
+    'latex','FontWeight','bold', 'Units', 'normalized', 'FontSize', 15);   
        
 % END (I): MAKE PLOT OF (Y) REHO AGAINST (X) IED RATE MEASUDRED DURING LONG-TERM 
 % MONITORING FOR ALL SESSIONS
@@ -190,7 +194,7 @@ for sub_ind = 1:numel(fd_name_sub)   % for each subject
              
             % concatenate vertically log(ied_during_scan_cur) to
             % ied_during_scan_all_sess_log
-            ied_during_scan_all_sess_log = [ied_during_scan_all_sess_log; log(cell2mat(ied_during_scan_cur))];
+            ied_during_scan_all_sess_log = [ied_during_scan_all_sess_log; log10(cell2mat(ied_during_scan_cur))];
                    
         end
     end
@@ -223,14 +227,14 @@ plot(ied_during_scan_all_sess_log, y_pred2, 'k-', 'LineWidth', 1); hold on
 [r_pear2, pval_pear2] = corr(ied_during_scan_all_sess_log, reho_ch_matched_all_sess, 'Type', 'Pearson');
 
 % format pearson r str, round value to 3 d.p.
-r_pear_str2 = ['r = ', num2str(round(r_pear2, 3)), ', '];
+r_pear_str2 = ['\(r = \) ', num2str(round(r_pear2, 3)), ', '];
 
 % if pval < 0.001, then show 'p < 0.001' on x-label, otherwise, show value
 % corrected to 1 sig. fig.
 if pval_pear2 < 0.001
-    pval_pear_str2 = 'p \(<\) 0.001';
+    pval_pear_str2 = '\(p < 0.001\)';
 else
-    pval_pear_str2 = ['p = ', num2str(round(pval_pear2, 1, 'significant'))];
+    pval_pear_str2 = ['\(p = \) ', num2str(round(pval_pear2, 1, 'significant'))];
 end
 
 % format str displaying stat. sig. btw. ReHo and IED_{during scan}
@@ -241,7 +245,7 @@ box on;
 % grid on;
 
 % set x- and y-labels, 
-xlabel(['IED\(_{\mathrm{during}}\)\(_{ }\)\(_{\mathrm{scan}}\) on log scale, ', ...
+xlabel(['IED\(_{\mathrm{during}}\)\(_{ }\)\(_{\mathrm{scan}}\) on log scale [\(\mathrm{min}^{\mathrm{-1}}\)], ', ...
     stat_fig_str2], 'Interpreter','latex');
 ylabel('ReHo','Interpreter','latex');
 
@@ -252,6 +256,10 @@ ax2.FontSize = 12;
 % set interpreter of tick labels on both axes 
 ax2.TickLabelInterpreter = 'latex';
             
+% get y-axis min and max
+ymin2 = ax2.YLim(1);
+ymax2 = ax2.YLim(2);
+
 % % get x-axis min and max
 xmin2 = min(ied_during_scan_all_sess_log);
 xmax2 = max(ied_during_scan_all_sess_log);
@@ -265,7 +273,7 @@ pbaspect([xmax2-xmin2, pbr*(xmax2-xmin2), 1]); % multiple y-axis by the factor
 
 % place string on plot
 text(0.93, 0.95, '(b)', 'Interpreter', ...
-    'latex','FontWeight','bold', 'Units', 'normalized', 'FontSize', 14);   
+    'latex','FontWeight','bold', 'Units', 'normalized', 'FontSize', 15);   
 
 % END (II): MAKE PLOT OF (Y) REHO AGAINST (X) IED RATE MEASUDRED DURING SCAN FOR ALL SESSIONS
 %-----------------------------------------------------------------------------
@@ -282,16 +290,36 @@ ax2.Position(1) = ax1.Position(1) + ax1.Position(3) + hdiff;
 
 %----------------------------------------
 
-% xmin_all = floor(min([xmin1, xmin2]));
-% xmax_all = ceil(max([xmax1, xmax2]));
-% 
-% ax1.XLim = [xmin_all, xmax_all];
-% ax1.XTick = [xmin_all:1:xmax_all];
-% 
-% ax2.XLim = [xmin_all, xmax_all];
-% ax2.XTick = [xmin_all:1:xmax_all];
-% 
-% ax1.PlotBoxAspectRatio = [xmax_all-xmin_all, pbr*(xmax_all-xmin_all), 1]
+% adjust y-axis limits on both figures, keep them the same
+ymin_all = floor(min([ymin1, ymin2]));   % get global ymin
+ymax_all = ceil(max([ymax1, ymax2]));   % get global ymax
+
+% set y-axis limits, ticks, and labels on ax1
+ax1.YLim = [ymin_all, ymax_all];   % limits of y-axis
+ax2.YLim = [ymin_all, ymax_all];   % limits of y-axis
+
+% adjust x-axis limits on both figures, keep them the same
+xmin_all = floor(min([xmin1, xmin2]));   % get global xmin
+xmax_all = ceil(max([xmax1, xmax2]));   % get global xmax
+
+% format exponents on xlabels 
+% though log scale is applied on x data, 
+% set x-axis labels on ax1 as [0.01, 0.1, 1, 10, 100, ...] 
+xlabel_expo = [xmin_all:1:xmax_all];   % format exponents
+
+% set x-axis limits, ticks, and labels on ax1
+ax1.XLim = [xmin_all, xmax_all];   % limits of x-axis
+ax1.XTick = xmin_all:1:xmax_all;   % set xticks on ax1
+ax1.XTickLabel = 10.^(xlabel_expo);   % format xtick labels
+
+% set x-axis limits, ticks, and labels on ax2
+ax2.XLim = [xmin_all, xmax_all];
+ax2.XTick = xmin_all:1:xmax_all;   % set xticks on ax2
+ax2.XTickLabel = 10.^(xlabel_expo);   % format xtick labels
+
+% set aspect ratio on both ax1 and ax2
+ax1.PlotBoxAspectRatio = [xmax_all-xmin_all, pbr*(xmax_all-xmin_all), 1];
+ax2.PlotBoxAspectRatio = [xmax_all-xmin_all, pbr*(xmax_all-xmin_all), 1];
 
 %----------------------------------------
 % format filename for current plot
