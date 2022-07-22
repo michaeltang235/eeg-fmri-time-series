@@ -45,6 +45,9 @@ ch_name_matched_ied_reho = st_reho.grand.(fdnames_sub_list_reho{sub_list_reho_in
 window_size = 2;   % in seconds
 % fs = st_eeg.fs;
 
+% input threshold for corr. coef. 
+thresh = 0.4;
+
 %----------------------
 % ch_name_matched_array is a subset of sig_box_all, representing channels
 % with non-zero IEDs registered during scan.
@@ -54,7 +57,7 @@ ch_name_matched_array = ch_name_matched_ied_reho;
 
 sig_box_all = st_reho.grand.(fdnames_sub_list_reho{sub_list_reho_ind}).(fdnames_run_reho{1}).sig_box_all;
 
-% less_prom_ch_test = get_less_prom_ch(ch_name_matched_ied_reho, eeg_file_path{:}, window_size, threshold);
+less_prom_ch_test = get_less_prom_ch(ch_name_matched_ied_reho, sig_box_all, eeg_file_path, window_size, thresh);
 
 % prominent channels = those that have IEDs registered during fmri scan,
 % their names are provided in .txt (e.g. event_type_locations.txt) file 
@@ -67,7 +70,7 @@ sig_box_all = st_reho.grand.(fdnames_sub_list_reho{sub_list_reho_ind}).(fdnames_
 % note: only channels not in the list of prominent channels can be 
 % 'less-prominent channels' and 'other channels', regardless of event type.
 % 
-function less_prom_ch = get_less_prom_ch(ch_name_matched_array, eeg_file_path, window_size, threshold)
+function op_st = get_less_prom_ch(ch_name_matched_array, sig_box_all, eeg_file_path, window_size, thresh)
 
 % initialize output struct, which contains the following
 % op_st.prom_ch = prominent channels grouped by their event type
@@ -213,9 +216,6 @@ end
 % PART (V): GET LIST OF LESS-PROMINENT CHANNELS FOR EACH TYPE OF PROMINENT
 % CHANNELS
 
-% input threshold for corr. coef. 
-thresh = 0.4;
-
 % define less prominent channels as those having corr. coef. greater than
 % or equal to threshold, relative to each type of prominent channels
 % initialize less_prom_ch array with format below,
@@ -281,7 +281,7 @@ op_st.prom_ch = prom_ch;   % prominent channels
 op_st.less_prom_ch = less_prom_ch;   % less-prominent channels relative to each type of prominent channels
 op_st.other_ch = other_ch;   % other channels
 
-% end   % end function less_prom_ch = get_less_prom_ch(input_channel_array, eeg_file_path, window_size)
+end   % end function less_prom_ch = get_less_prom_ch(input_channel_array, eeg_file_path, window_size)
 
 %-------------------
 % TO BE ADDED TO STATIC_ANALYSIS_REHO.m BEOFRE CALLING THIS SCRIPT
