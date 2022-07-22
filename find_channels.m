@@ -67,11 +67,13 @@ sig_box_all = st_reho.grand.(fdnames_sub_list_reho{sub_list_reho_ind}).(fdnames_
 % note: only channels not in the list of prominent channels can be 
 % 'less-prominent channels' and 'other channels', regardless of event type.
 % 
-% function less_prom_ch = get_less_prom_ch(ch_name_matched_array, eeg_file_path, window_size, threshold)
+function less_prom_ch = get_less_prom_ch(ch_name_matched_array, eeg_file_path, window_size, threshold)
 
 % initialize output struct, which contains the following
 % op_st.prom_ch = prominent channels grouped by their event type
 % op_st.less_prom_ch = less prominent channels relative to prominent channels
+% op_st.other_ch = other channels (remaining channels from the input
+% channel list)
 op_st = struct;
 
 % load eeg structure from path given
@@ -278,8 +280,8 @@ other_ch = deduct_less_prom_ch;
 op_st.prom_ch = prom_ch;   % prominent channels
 op_st.less_prom_ch = less_prom_ch;   % less-prominent channels relative to each type of prominent channels
 op_st.other_ch = other_ch;   % other channels
-% 
-% % end   % end function less_prom_ch = get_less_prom_ch(input_channel_array, eeg_file_path, window_size)
+
+% end   % end function less_prom_ch = get_less_prom_ch(input_channel_array, eeg_file_path, window_size)
 
 %-------------------
 % TO BE ADDED TO STATIC_ANALYSIS_REHO.m BEOFRE CALLING THIS SCRIPT
