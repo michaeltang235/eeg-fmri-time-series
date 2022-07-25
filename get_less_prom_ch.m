@@ -37,6 +37,9 @@ function op_st = get_less_prom_ch(prom_ch_array, sig_box_all, eeg_file_path, win
 % op_st.other_ch = other channels (remaining channels from the input
 % channel list)
 op_st = struct;
+op_st.prom_ch = {};   % prominent channels
+op_st.less_prom_ch = {};   % less-prominent channels relative to each type of prominent channels
+op_st.other_ch = {};   % other channels
 
 % load eeg structure from path given
 st_eeg = load(eeg_file_path);
@@ -96,10 +99,14 @@ prom_ch = {};   % intiailize array
 for i = 1:size(prom_ch_array, 1)   % for every row in ch_name_matched_array
     cur_ch_name = prom_ch_array{i, 2};   % get curr. ch. name
     % find row index in col. 1 of eeg_ch with matching name
-    [~, ind_found] = ismember(cur_ch_name, eeg_ch(:, 1));   
-    prom_ch{i, 1} = prom_ch_array{i, 1};   % assign event type
-    prom_ch{i, 2} = prom_ch_array{i, 2};   % assign channel name
-    prom_ch{i, 3} = eeg_ch{ind_found, end};   % assign eeg time series
+    [~, ind_found] = ismember(cur_ch_name, eeg_ch(:, 1));  
+    if ~isequal(ind_found, 0)
+        prom_ch{i, 1} = prom_ch_array{i, 1};   % assign event type
+        prom_ch{i, 2} = prom_ch_array{i, 2};   % assign channel name
+        prom_ch{i, 3} = eeg_ch{ind_found, end};   % assign eeg time series
+    else 
+        return;   % else, meaning no indices found, return control to line calling function
+    end
 end
 
 % END PART (II): GET EEG TIME SERIES FOR EACH PROMINENT CHANNEL (THOSE HAVING
