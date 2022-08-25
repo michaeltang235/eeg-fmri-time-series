@@ -193,16 +193,19 @@ for item = 1:numel(uni_ev_type)
     avg_sq_prom_ch_type{item} = mean([cell2mat(prom_ch_type{item}(:, end))].^2, 1);
 end
 
-% arrange evti by order of prom_ch_type, format of evti_prom_ch is given
+% arrange evti and event_def by order of prom_ch_type, format of evti_prom_ch 
+% and event_def_prom_ch is given
 % below, 
 % in each cell (unique event type), 
 % event onsets in seconds
 evti_prom_ch = {};   % initialize array
+event_def_prom_ch = {};
 for item = 1:numel(prom_ch_type)   % for each event type 
     cur_ev_type = prom_ch_type{item}{1, 1};   % get curr. event type
     for entry = 1:numel(event_def)   % for every cell in event_def
         if ismember(cur_ev_type, event_def{entry})   % if event type agrees
             evti_prom_ch{item} = evti{entry};   % add event onsets (evti) to current cell
+            event_def_prom_ch{item} = event_def{entry};   % add event def. to current cell
         end
     end
 end
@@ -455,6 +458,7 @@ opst.(fdnames_eeg{run_ind}).prom_ch = prom_ch;   % prominent channels
 opst.(fdnames_eeg{run_ind}).prom_ch_type = prom_ch_type;   % prominent channels by event type
 opst.(fdnames_eeg{run_ind}).mean_eeg_ts = mean_eeg_ts;   % mean time series of prominent channels by event type
 opst.(fdnames_eeg{run_ind}).avg_waveform_ch = avg_waveform_ch;   % avg. waveform of target channels
+opst.(fdnames_eeg{run_ind}).event_def_prom_ch = event_def_prom_ch;   % event def. in same oder as prom. ch. type
 
 % print message to terminal
 sprintf('done working on run%d of sub%d', run_ind, str2num(subnum))
@@ -465,7 +469,7 @@ sprintf('done working on run%d of sub%d', run_ind, str2num(subnum))
 % PART (XII): save output struct to path
 
 if op_results == 1
-    save(fullfile(fname_op, filename_op), 'opst');
+    save(fullfile(fname_op, filename_op), 'opst', '-v7.3');
 end
 
 % END PART (XII): save output struct to path
