@@ -127,7 +127,7 @@ filename_op = sprintf('sub%s_%s_ev_def_%s', subnum, fd_run{run_ind}, num2str(ev_
 % save figure to file 
 if op_results == 1
     saveas(f_grand, fullfile(directname_op, filename_op), 'epsc');
-%     saveas(f_grand, fullfile(directname_op, filename_op), 'jpeg');
+    saveas(f_grand, fullfile(directname_op, filename_op), 'jpeg');
 end
 
 
