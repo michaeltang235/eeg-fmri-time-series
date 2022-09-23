@@ -227,7 +227,9 @@ function run = onset_times(evfile_path_curr, scan_para_st, sampfreq, events)
         if isempty(ontimesar{i})   % if current cell is empty (no marking found)
             evti{i} = [];
         else   % if current cell is not empty
-            evti{i} = ontimesar{i}(:,2);   % from col. 2 in each cell 
+            % only select entries with evti >= 0 w.r.t. fmri scan start
+            ind_req = find(ontimesar{i}(:,2) >= 0);
+            evti{i} = ontimesar{i}(ind_req,2);   % from col. 2 in each cell 
         end
     end
     
