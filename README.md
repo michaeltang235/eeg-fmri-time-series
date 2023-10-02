@@ -11,7 +11,7 @@ time series features including regional homogeneity (ReHo) and amplitude of low-
 epileptic activity in local brain areas, and function connectivity (FC) to measure correlation in rs-fMRI signal 
 fluctuations between distinct areas of interest.
 
-Despite indications that the time series features mentioned above could provide information about the location of 
+Despite indications that the time series features mentioned above could provide information about the locations of 
 epileptic areas, te number of studies directly compared the intensity of seizure activity with magnitude of time series features 
 for higher accuracy was rather limited. Moreover, the dynamic nature of brain acitivty, which fluctuates over time 
 scales ranging from seconds to minutes, was not taken into account in majority of the studies published thus far. Hence, 
