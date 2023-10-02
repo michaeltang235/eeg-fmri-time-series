@@ -15,13 +15,13 @@ Despite indications that the time series features mentioned above could provide 
 epileptic areas, te number of studies directly compared the intensity of seizure activity with magnitude of time series features 
 for higher accuracy was rather limited. Moreover, the dynamic nature of brain acitivty, which fluctuates over time 
 scales ranging from seconds to minutes, was not taken into account in majority of the studies published thus far. Hence, 
-this project investigated static and dynamic features (ReHo, ALFF, fractional fALFF, FC) of rs-fMRI time series 
+this project investigated static and dynamic features (ReHo, ALFF, fractional fALFF, and FC) of rs-fMRI time series 
 in focal epilepsy patients with simultaneous intracranial EEG recordings to confirm the pathological relevance 
 of the observed rs-fMRI abnormalities. Specifically, the influence of interictal epileptic discharges (IEDs) 
 on static and dynamic rs-fMRI properties was determined.
 
 **Analyses:**\
-In static analysis, rs-fMRI features (ReHo, ALFF, fractional ALFF, FC) were computed over the entire duration
+In static analysis, rs-fMRI features (ReHo, ALFF, and fractional ALFF, FC) were computed over the entire duration
 of fMRI scan and were correlated to the rate of IEDs occurring at the same locations.
 
 In dynamic analysis, the trasient nature of epileptic activity, which fluctuated over the duration of fMRI scan, was considered.
