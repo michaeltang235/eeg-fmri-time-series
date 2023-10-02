@@ -1,1 +1,1 @@
-This folder contains some of the code written in MATLAB
+This folder contains scripts written in MATLAB for analyzing EEG-fMRI data across all subjects in database all at once. 
