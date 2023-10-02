@@ -1,10 +1,10 @@
-# eeg_fmri
+# eeg-fmri-time-series
 This repository highlights some of the scripts I wrote for the project of using fMRI time series features to detect brain areas
 generating seizure-related acitivity. Below is a brief summary of the project. 
 
 **Background:**\
 The current clinical gold standard to identify epileptic brain areas involves implanting electrodes in the brain 
-during presurgica workup, yet only offers limited brain coverage with risks of developing a host of complications.
+during presurgical workup, yet only offers limited brain coverage with risks of developing a host of complications.
 Resting-state fMRI (rs-fMRI), on the other hand, measures spontaneous activity at high spatial resolution 
 across the entire brain with no invasive procedures required during image acquisition. Previous rs-fMRI studies employed
 time series features including regional homogeneity (ReHo) and amplitude of low-frequency fluctuations (ALFF) to measure
