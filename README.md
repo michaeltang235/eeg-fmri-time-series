@@ -33,12 +33,12 @@ Accordingly, a sliding-window approach was implemented in which time series was 
 *related scripts: filenames with 'dynamic_' included
 
 **Folder structure:**\
-Under 'subject_code', there are scripts for subject-specific analyses, such as preprocessing of fMRI images, 
+Under 'subject_code' contains scripts for subject-specific analyses, such as preprocessing of fMRI images, 
 matching IED onset times to the start of fMRI scans. <br>
 
-Under 'code/', there are scripts for analyzing EEG-fMRI data across all subjects in database all at once. <br>
+Under 'code/' contains scripts for analyzing EEG-fMRI data across all subjects in database all at once. <br>
 
-Under 'plots_code/', there are scripts that were used to make plots. <br>
+Under 'plots_code/' contains scripts that were used to make plots. <br>
 
 **Conclusions**\
 This work provides evidence that rs-fMRI time series features could locate epileptic brain areas for presurgical evaluation, 
@@ -53,3 +53,8 @@ Overall, with no information about epileptogenicity in any voxel of the brain, a
 be estimated based solely on the magnitude of ReHo and fALFF, and on temporal variations in ALFF. 
 With initial knowledge of some voxels having IEDs recorded, other voxels that are likely to possess the same 
 type of IEDs could be identified with FC.
+
+<br>
+
+This work is currently being finalized for publication.
+
