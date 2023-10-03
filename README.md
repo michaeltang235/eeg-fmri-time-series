@@ -40,7 +40,7 @@ Under 'code/' contains scripts for analyzing EEG-fMRI data across all subjects i
 
 Under 'plots_code/' contains scripts that were used to make plots. <br>
 
-**Conclusions**\
+**Conclusions:**\
 This work provides evidence that rs-fMRI time series features could locate epileptic brain areas for presurgical evaluation, 
 guiding (offering complementary information for) physicians on implantation of intracranial electrodes and resection surgery. 
 Among the features studied, the magnitude of ReHo, fALFF and FC exhibited robust correlation with IED rates in 
