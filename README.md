@@ -33,7 +33,7 @@ Accordingly, a sliding-window approach was implemented in which time series was 
 *related scripts: filenames with 'dynamic_' included
 
 **Folder structure:**\
-Under code/, there are scripts for analyzing EEG-fMRI data across all subjects in database all at once.
+Under 'code/', there are scripts for analyzing EEG-fMRI data across all subjects in database all at once.
 
 **Conclusions**\
 This work provides evidence that rs-fMRI time series features could locate epileptic brain areas for presurgical evaluation, 
