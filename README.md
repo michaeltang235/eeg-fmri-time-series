@@ -24,9 +24,13 @@ on static and dynamic rs-fMRI properties was determined.
 In static analysis, rs-fMRI features (ReHo, ALFF, and fractional ALFF, FC) were computed over the entire duration
 of fMRI scan and were correlated to the rate of IEDs occurring at the same locations.
 
+*related scripts: filenames with 'static_' included
+
 In dynamic analysis, the trasient nature of epileptic activity, which fluctuated over the duration of fMRI scan, was considered.
 Accordingly, a sliding-window approach was implemented in which time series was decomposed into segments of
 120 s with 50% overlap. In every window, rs-fMRI features were computed and compared with the instantaneous IED rate.
+
+*related scripts: filenames with 'dynamic_' included
 
 **Conclusions**\
 This work provides evidence that rs-fMRI time series features could locate epileptic brain areas for presurgical evaluation, 
