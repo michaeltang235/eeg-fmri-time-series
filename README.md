@@ -36,7 +36,7 @@ Accordingly, a sliding-window approach was implemented in which time series was 
 Under 'subject_code' contains scripts for subject-specific analyses, such as preprocessing of fMRI images, 
 matching IED onset times from iEEG recordings to the start of fMRI scans. <br>
 
-Under 'code/' contains scripts for analyzing EEG-fMRI data across all subjects in database all at once. <br>
+Under 'code/' contains scripts for analyzing EEG-fMRI data across all subjects in the database. <br>
 
 Under 'plots_code/' contains scripts that were used to make plots. <br>
 
